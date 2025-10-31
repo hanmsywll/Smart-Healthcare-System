@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "frontend:dev": "cd resources && npm run dev",
+        "frontend:build": "cd resources && npm run build",
+        "frontend:install": "cd resources && npm install",
+        "backend:serve": "php artisan serve",
+        "backend:migrate": "php artisan migrate",
+        "backend:fresh": "php artisan migrate:fresh --seed",
+        "start": "concurrently \"npm run backend:serve\" \"npm run frontend:dev\"",
+        "setup": "composer install && npm run frontend:install && php artisan key:generate && php artisan migrate"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.0",
+        "@vitejs/plugin-react": "^5.1.0",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "tailwindcss": "^4.0.0",
+        "vite": "^7.0.7"
+    }
+}

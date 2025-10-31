@@ -1,202 +1,163 @@
-# Smart Healthcare System
+# 🌐 Medly: The Future of Secure Healthcare Records in Indonesia
 
-A comprehensive healthcare management system built with Laravel 11, designed to streamline hospital operations, patient management, and medical record keeping.
+---
 
-## 👥 Tim Pengembang & Pembagian Service
+## 🩺 Overview :
 
-1. **Service Autentikasi & Manajemen Pengguna (Auth Service)** - Izza
-   - Login/Register system
-   - Role-based access control
-   - User profile management
-   - Session management
+Electronic Medical Records (EMR) are digital systems that replace traditional paper charts by storing patients’ medical histories, diagnoses, medications, and treatments.  
+However, in Indonesia, these systems often exist in isolated, centralized silos, making it difficult for healthcare providers to access comprehensive patient data across multiple hospitals—slowing down care and compromising accuracy.  
+**Medly** offers a breakthrough by leveraging the **Internet Computer (ICP)** blockchain to decentralize EMR storage.  
+Each registered hospital links directly to tamper-proof patient records, creating a secure and interoperable ecosystem where medical data can be safely shared and verified.  
+Doctors gain instant access to complete patient histories, improving decision-making and care quality, while patients enjoy transparency and full ownership of their data.  
+By bridging technology with patient-centered care, Medly ensures improved healthcare outcomes while aligning with local health regulations.
 
-2. **Service Pendaftaran & Janji Temu (Appointment Service)** - Raihan
-   - Appointment scheduling
-   - Doctor availability management
-   - Patient registration
-   - Appointment notifications
 
-3. **Service Resep & Farmasi (Prescription & Pharmacy Service)** - Dini
-   - Digital prescription management
-   - Medicine inventory
-   - Pharmacy integration
-   - Prescription tracking
+## ⚙️ Features :
 
-4. **Service Rekam Medis Elektronik (Electronic Health Record Service)** - Fanial
-   - Patient medical records
-   - Medical history tracking
-   - Document management
-   - Health data analytics
+- 🏥 **Hospital & Doctor Management** – Register, manage, or deactivate hospitals and doctors  
+- 📋 **Medical Records** – Add and access patient records securely  
+- 🔎 **Data Retrieval** – View hospitals, doctors, and patient records easily
 
-## 🏗️ Project Structure
 
-```
-Smart-Healthcare-System/
-├── app/                    # Laravel application logic
-│   ├── Http/Controllers/   # HTTP controllers
-│   ├── Models/            # Eloquent models
-│   └── Providers/         # Service providers
-├── bootstrap/              # Laravel bootstrap files
-├── config/                # Laravel configuration files
-├── database/              # Database migrations, seeders, factories
-│   ├── migrations/        # Database migrations
-│   ├── seeders/          # Database seeders
-│   └── factories/        # Model factories
-├── public/                # Public assets and entry point
-├── resources/             # Views, assets, and frontend files
-│   ├── css/              # Stylesheets
-│   ├── js/               # JavaScript files
-│   ├── views/            # Blade templates
-│   └── src/              # React frontend (untuk development masa depan)
-├── routes/                # Route definitions
-│   ├── web.php           # Web routes
-│   ├── api.php           # API routes
-│   └── console.php       # Console routes
-├── storage/               # Storage for logs, cache, uploads
-├── tests/                 # Test files
-└── vendor/               # Composer dependencies
-```
+## 🔄 How It Works
 
-## 🚀 Tech Stack
+- 🏥 **Hospital Registration** – Hospitals register with basic info and are managed by the owner’s wallet  
+- 👨‍⚕️ **Doctor Management** – Hospitals add or deactivate doctors tied to their institution  
+- 📋 **Medical Records** – Doctors add diagnoses and supporting data linked to patient ID  
+- 🔎 **Data Access** – Users can retrieve active hospitals, doctors, and patient-specific records  
 
-- **Backend**: Laravel 11
-- **Database**: SQLite (development), MySQL/PostgreSQL (production)
-- **Frontend**: Blade Templates (default Laravel)
-- **Styling**: Tailwind CSS
-- **Build Tool**: Vite
-- **Package Manager**: Composer (PHP), NPM (JavaScript)
 
-## 📋 Prerequisites
+## ✨ Project Insights
 
-- PHP >= 8.2
-- Composer
-- Node.js >= 18
-- NPM atau Yarn
+- 📝 ** Pitch deck ** – [View File](#)  
+🎥 **Demo Video ** – [Watch Video](https://youtu.be/Cy-rEW8Gtvo)
 
-## 🛠️ Quick Start
 
-1. **Clone repository**
-   ```bash
-   git clone <repository-url>
-   cd Smart-Healthcare-System
-   ```
 
-2. **Setup project**
-   ```bash
-   npm run setup
-   ```
+## 🛠 Tech Stack
 
-3. **Start development**
-   ```bash
-   npm start
-   ```
+- 🎨 **Frontend**: ReactJS (JavaScript)  
+- 🧠 **Canister Development**: Motoko  
+- 🔐 **Authentication**: Internet Identity  
+- 💅 **Styling**: TailwindCSS  
 
-   Project akan berjalan di:
-   - Backend: http://127.0.0.1:8000
-   - Frontend: http://localhost:5173 (jika menggunakan Vite)
 
-## 🔧 Manual Setup
+=======
+# 🌐 Medly: The Future of Secure Healthcare Records
 
-Jika `npm run setup` tidak bekerja, lakukan setup manual:
+[![Demo Video](https://img.shields.io/badge/Demo-Watch%20Video-red?style=for-the-badge&logo=youtube)](https://youtu.be/Cy-rEW8Gtvo)
+[![Pitch Deck](https://img.shields.io/badge/Pitch-View%20Deck-blue?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=4JvdCAZJ4FI)
 
-### Backend Setup
+---
+
+## 🩺 Project Overview  
+
+**Medly** is a decentralized Electronic Medical Records (EMR) platform that replaces traditional paper charts with secure, blockchain-based storage. Around the world, many EMR systems remain isolated and centralized, making it difficult for healthcare providers to access complete patient histories across different hospitals or even across borders. This leads to slower treatment, higher risk of errors, and limited quality of care for patients.
+
+By leveraging the Internet Computer (ICP) blockchain, Medly creates a tamper-proof, interoperable ecosystem for medical data. Hospitals can securely share and verify patient records, doctors gain instant access to accurate histories, and patients have full ownership of their health information — ensuring transparency, speed, and trust in every step of care.
+
+### 🎯 Mission
+To make healthcare data **secure, transparent, and universally accessible** while giving **patients control** over their records.
+
+---
+
+## 🚨 Problem  
+
+Current EMR systems suffer from:  
+- **Centralization risks** → Data breaches & downtime  
+- **Lack of interoperability** → Fragmented medical records  
+- **Limited patient control** → Patients can’t fully manage their data  
+- **Security vulnerabilities** → Sensitive medical data often unprotected  
+
+---
+
+## 💡 Our Solution  
+
+Medly ensures:  
+- **Decentralized Architecture** → No single point of failure  
+- **Secure Record Management** → Encrypted data on IPFS, hashes on ICP blockchain  
+- **Easy Onboarding** → Hospitals register, mint doctors, doctors upload records  
+- **Patient Transparency** → Full access logs & control over permissions  
+
+---
+
+## 🏗️ Core Workflow  
+
+1. **Hospital Registration** → Hospital creates account & accesses Dashboard  
+2. **Mint Doctor** → Hospital generates Doctor accounts automatically  
+3. **Doctor Login** → Doctor logs in & accesses Doctor Dashboard  
+4. **Upload Records** → Doctors upload encrypted medical records  
+
+---
+
+## 📊 System Flowchart  
+
+<img width="300" alt="Medly System Flowchart" src="https://github.com/user-attachments/assets/914ee9ae-b5fc-4e7a-9259-70a23c1a1205" />
+
+---
+
+## 🛠 Tech Stack  
+
+- 🎨 **Frontend**: ReactJS (JavaScript)  
+- 🧠 **Canister Development**: Motoko  
+- 📦 **Storage**: IPFS (Pinata)  
+- 🔐 **Authentication**: Internet Identity  
+- 💅 **Styling**: TailwindCSS  
+
+---
+
+## 🚀 Key Features  
+
+- 🏥 **Hospital Dashboard**: Register & onboard doctors  
+- 👨‍⚕️ **Doctor Dashboard**: Upload patient records securely  
+- 🔐 **Decentralized Storage**: IPFS + ICP Blockchain  
+- 📜 **Access Logs**: Patients maintain visibility and control  
+- 🌐 **Interoperable System**: Works across multiple providers  
+
+---
+
+## ✨ Demo & Resources  
+
+- 📝 **Pitch Deck** – [View File](https://www.youtube.com/watch?v=4JvdCAZJ4FI)  
+- 🎥 **Demo Video** – [Watch Video](https://youtu.be/Cy-rEW8Gtvo)  
+
+---
+
+## 🏁 Getting Started  
+
+### Prerequisites  
+
 ```bash
-# Install PHP dependencies
-composer install
+# Install DFX SDK
+sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
 
-# Copy environment file
-cp .env.example .env
-
-# Generate application key
-php artisan key:generate
-
-# Run migrations (jika diperlukan)
-php artisan migrate
-
-# Start Laravel server
-php artisan serve
-```
-
-### Frontend Setup
-```bash
-# Install JavaScript dependencies
+# Install dependencies
 npm install
-
-# Build assets
-npm run build
-
-# Or start development server
-npm run dev
 ```
 
-## 📜 Available Scripts
-
-- `npm run setup` - Setup lengkap project (backend + frontend)
-- `npm start` - Start development server (backend + frontend)
-- `npm run dev` - Build assets untuk development
-- `npm run build` - Build assets untuk production
-- `npm run backend:serve` - Start Laravel server saja
-- `npm run backend:migrate` - Run database migrations
-- `npm run backend:fresh` - Fresh migrate database
-
-## 🎯 Development Status
-
-**Status Saat Ini**: Setup Awal ✅
-
-Project ini saat ini dalam kondisi setup awal yang bersih dengan:
-- ✅ Struktur Laravel 11 standar
-- ✅ Konfigurasi dasar (database, session, dll)
-- ✅ Template Blade default
-- ✅ API routes kosong (siap untuk development)
-- ✅ Pembagian tugas tim sudah ditentukan
-
-**Tahap Selanjutnya** (1 minggu ke depan):
-- 🔄 Development service-service oleh masing-masing developer
-- 🔄 Implementasi fitur-fitur sesuai pembagian tugas
-- 🔄 Integrasi antar service
-
-## 🔐 Security Features
-
-- CSRF Protection
-- SQL Injection Prevention
-- XSS Protection
-- Authentication & Authorization
-- Session Security
-
-## 🧪 Testing
+### Run Locally
 
 ```bash
-# Run tests
-php artisan test
+# Start local ICP replica
+dfx start --background
 
-# Run specific test
-php artisan test --filter TestName
+# Deploy canisters
+dfx deploy
+
+# Start frontend
+npm start
 ```
 
-## 🚀 Deployment
+## 👥 Team
 
-1. Set environment variables untuk production
-2. Run `composer install --optimize-autoloader --no-dev`
-3. Run `npm run build`
-4. Configure web server (Apache/Nginx)
-5. Set proper file permissions
+- [**@amzy_co**](https://instagram.com/amzy_co) – Product Manager  
+- [**@_d.dzakky**](https://instagram.com/_d.dzakky) – Frontend Developer  
+- [**@farros.mufid**](https://instagram.com/farros.mufid) – Frontend Developer  
+- [**@mieayamjava**](https://instagram.com/mieayamjava) – Smart Contract Developer  
 
-## 🤝 Contributing
 
-1. Fork repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
+## 📄 License  
 
-## 📄 License
+This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.  
 
-This project is licensed under the MIT License.
-
-## 📞 Support
-
-Untuk pertanyaan atau bantuan, silakan hubungi tim development:
-- **Izza** - Auth Service
-- **Raihan** - Appointment Service  
-- **Dini** - Prescription & Pharmacy Service
-- **Fanial** - Electronic Health Record Service
+Copyright (c) 2025 Medly  

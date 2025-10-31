@@ -5,11 +5,11 @@ import { Principal } from '@dfinity/principal'; // Import Principal
 import { idlFactory } from 'declarations/Medical_backend';
 
 // Canister IDs from dfx deploy
-const MEDICAL_BACKEND_CANISTER_ID = process.env.CANISTER_ID_MEDICAL_BACKEND;
-const INTERNET_IDENTITY_CANISTER_ID = process.env.CANISTER_ID_INTERNET_IDENTITY;
+const MEDICAL_BACKEND_CANISTER_ID = (typeof process !== 'undefined' && process.env?.CANISTER_ID_MEDICAL_BACKEND) || 'rdmx6-jaaaa-aaaaa-aaadq-cai';
+const INTERNET_IDENTITY_CANISTER_ID = (typeof process !== 'undefined' && process.env?.CANISTER_ID_INTERNET_IDENTITY) || 'rdmx6-jaaaa-aaaaa-aaadq-cai';
 
 // Determine if running locally or on mainnet
-const isLocal = process.env.NODE_ENV === 'development';
+const isLocal = (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') || true;
 const IDENTITY_PROVIDER = isLocal
   ? `http://${INTERNET_IDENTITY_CANISTER_ID}.localhost:4943`
   : 'https://identity.ic0.app';

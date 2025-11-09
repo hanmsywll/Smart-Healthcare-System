@@ -17,14 +17,16 @@ class JanjiTemu extends Model
         'id_pasien',
         'id_dokter',
         'tanggal_janji',
-        'waktu_janji',
+        'waktu_mulai',
+        'waktu_selesai',
         'status',
         'keluhan',
     ];
 
     protected $casts = [
         'tanggal_janji' => 'date',
-        'waktu_janji' => 'datetime',
+        'waktu_mulai' => 'datetime:H:i',
+        'waktu_selesai' => 'datetime:H:i',
     ];
 
     public function pasien()

@@ -21,160 +21,7 @@
         }
     ],
     "paths": {
-        "/appointments": {
-            "get": {
-                "tags": [
-                    "Appointments"
-                ],
-                "summary": "Get list of appointments",
-                "description": "Returns list of appointments",
-                "operationId": "getAppointments",
-                "parameters": [
-                    {
-                        "name": "date",
-                        "in": "query",
-                        "description": "Filter by date",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "format": "date"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/JanjiTemu"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "Appointments"
-                ],
-                "summary": "Create a new appointment",
-                "description": "Returns the created appointment data",
-                "operationId": "createAppointment",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CreateJanjiTemuRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/JanjiTemu"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity"
-                    }
-                }
-            }
-        },
-        "/appointments/{id}": {
-            "get": {
-                "tags": [
-                    "Appointments"
-                ],
-                "summary": "Get appointment information",
-                "description": "Returns appointment data",
-                "operationId": "getAppointmentById",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Appointment id",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    }
-                }
-            }
-        },
-        "/appointments/{id}/status": {
-            "patch": {
-                "tags": [
-                    "Appointments"
-                ],
-                "summary": "Update appointment status",
-                "description": "Returns updated appointment data",
-                "operationId": "updateAppointmentStatus",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Appointment id",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateJanjiTemuStatusRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/JanjiTemu"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity"
-                    }
-                }
-            }
-        },
-        "/api/auth/login": {
+        "/auth/login": {
             "post": {
                 "tags": [
                     "Auth"
@@ -216,37 +63,12 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "token": {
-                                            "type": "string",
-                                            "example": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The given data was invalid."
+                                        "access_token": {
+                                            "type": "string"
                                         },
-                                        "errors": {
-                                            "properties": {
-                                                "email": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The email field is required."
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
                                         }
                                     },
                                     "type": "object"
@@ -255,20 +77,10 @@
                         }
                     },
                     "401": {
-                        "description": "Invalid credentials",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Invalid credentials"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Invalid credentials"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 }
             }
@@ -276,10 +88,10 @@
         "/doctors/schedules": {
             "get": {
                 "tags": [
-                    "Doctor Schedules"
+                    "Doctors"
                 ],
-                "summary": "Get list of doctor schedules",
-                "description": "Returns list of doctor schedules",
+                "summary": "[AMAN] Get list of doctor schedules",
+                "description": "Probis #1, Alur 3: Returns list of doctor schedules",
                 "operationId": "getSchedules",
                 "parameters": [
                     {
@@ -300,48 +112,293 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/Doctor"
+                                        "$ref": "#/components/schemas/DoctorScheduleResponse"
                                     }
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/janji/ketersediaan": {
+            "get": {
+                "tags": [
+                    "JanjiTemu"
+                ],
+                "summary": "[PUBLIK] Cek jam terisi",
+                "description": "Endpoint publik untuk melihat jam (mulai) yang SUDAH TERISI.",
+                "operationId": "getKetersediaan",
+                "parameters": [
+                    {
+                        "name": "id_dokter",
+                        "in": "query",
+                        "description": "ID Dokter",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "tanggal",
+                        "in": "query",
+                        "description": "Tanggal (YYYY-MM-DD)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar jam (H:i) yang sudah terisi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "example": "14:00"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
                     }
                 }
             }
         },
-        "/patients": {
+        "/janji": {
+            "get": {
+                "tags": [
+                    "JanjiTemu"
+                ],
+                "summary": "[AMAN] Get list Janji Temu (by Role)",
+                "description": "Probis #2: Returns list of Janji Temu (sesuai role user)",
+                "operationId": "getJanjiTemu",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status (terjadwal, selesai, dibatalkan)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/JanjiTemu"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
             "post": {
                 "tags": [
-                    "Patients"
+                    "JanjiTemu"
                 ],
-                "summary": "Create a new patient",
-                "description": "Returns the created patient data",
-                "operationId": "createPatient",
+                "summary": "[AMAN] Create a new Janji Temu",
+                "description": "Probis #1: Pasien Membuat Janji Temu (otomatis 60 menit)",
+                "operationId": "createJanjiTemu",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreatePatientRequest"
+                                "$ref": "#/components/schemas/CreateJanjiTemuRequest"
                             }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "Successful operation",
+                        "description": "Janji Temu berhasil dibuat",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Patient"
+                                    "$ref": "#/components/schemas/JanjiTemu"
                                 }
                             }
                         }
                     },
                     "422": {
-                        "description": "Unprocessable Entity"
+                        "description": "Validasi gagal (bentrok/luar shift)"
+                    },
+                    "403": {
+                        "description": "Forbidden (Pasien tidak ditemukan)"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/janji/{id}": {
+            "get": {
+                "tags": [
+                    "JanjiTemu"
+                ],
+                "summary": "[AMAN] Get Janji Temu by ID",
+                "description": "Mendapat detail Janji Temu (jika user punya hak)",
+                "operationId": "getJanjiTemuById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Janji Temu id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JanjiTemu"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "JanjiTemu"
+                ],
+                "summary": "[AMAN] Update status Janji Temu (Selesai / Batal)",
+                "description": "Probis #3 & #4: Pembatalan atau Penyelesaian Janji",
+                "operationId": "updateJanjiTemuStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Janji Temu id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateJanjiTemuStatusRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JanjiTemu"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "403": {
+                        "description": "Forbidden (Misal: Pasien ingin 'selesai')"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "JanjiTemu"
+                ],
+                "summary": "[AMAN] Delete Janji Temu (Not Allowed)",
+                "description": "Gunakan PUT /janji/{id} dengan status 'dibatalkan' (Sesuai Probis #3)",
+                "operationId": "deleteJanjiTemu",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Janji Temu id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "405": {
+                        "description": "Method Not Allowed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/patients/{id}": {
@@ -349,8 +406,8 @@
                 "tags": [
                     "Patients"
                 ],
-                "summary": "Get patient information",
-                "description": "Returns patient data",
+                "summary": "[AMAN] Get patient information",
+                "description": "Mendapatkan detail profil pasien.",
                 "operationId": "getPatientById",
                 "parameters": [
                     {
@@ -376,98 +433,123 @@
                     },
                     "404": {
                         "description": "Not Found"
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "Patients"
-                ],
-                "summary": "Update existing patient",
-                "description": "Returns updated patient data",
-                "operationId": "updatePatient",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Patient id",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdatePatientRequest"
-                            }
-                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
                 },
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Patient"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity"
+                "security": [
+                    {
+                        "sanctum": []
                     }
-                }
+                ]
             }
         }
     },
     "components": {
         "schemas": {
-            "JanjiTemu": {
-                "title": "Janji Temu",
-                "description": "Janji Temu model",
+            "Doctor": {
+                "title": "Doctor (Model Lengkap)",
+                "description": "Model Doctor lengkap dari database",
                 "properties": {
-                    "id_janji_temu": {
-                        "description": "ID Janji Temu",
+                    "id_dokter": {
                         "type": "integer",
                         "readOnly": true
                     },
+                    "id_pengguna": {
+                        "type": "integer"
+                    },
+                    "spesialisasi": {
+                        "type": "string"
+                    },
+                    "no_lisensi": {
+                        "type": "string"
+                    },
+                    "biaya_konsultasi": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "shift": {
+                        "type": "string",
+                        "enum": [
+                            "pagi",
+                            "malam"
+                        ]
+                    },
+                    "pengguna": {
+                        "$ref": "#/components/schemas/Pengguna"
+                    }
+                },
+                "type": "object"
+            },
+            "DoctorScheduleResponse": {
+                "title": "Doctor Schedule Response",
+                "description": "Data dokter yang disederhanakan untuk ditampilkan di jadwal",
+                "properties": {
+                    "id_dokter": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nama_lengkap": {
+                        "type": "string",
+                        "example": "Raihan Strange"
+                    },
+                    "spesialisasi": {
+                        "type": "string",
+                        "example": "Ahli Sihir"
+                    },
+                    "shift": {
+                        "type": "string",
+                        "enum": [
+                            "pagi",
+                            "malam"
+                        ],
+                        "example": "pagi"
+                    },
+                    "biaya_konsultasi": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 100000
+                    }
+                },
+                "type": "object"
+            },
+            "JanjiTemu": {
+                "title": "Janji Temu (Respons)",
+                "description": "Model Janji Temu (Respons)",
+                "properties": {
+                    "id_janji_temu": {
+                        "type": "integer"
+                    },
                     "id_pasien": {
-                        "description": "ID Pasien",
                         "type": "integer"
                     },
                     "id_dokter": {
-                        "description": "ID Dokter",
                         "type": "integer"
                     },
                     "tanggal_janji": {
-                        "description": "Tanggal Janji Temu",
                         "type": "string",
                         "format": "date"
                     },
-                    "waktu_janji": {
-                        "description": "Waktu Janji Temu",
+                    "waktu_mulai": {
                         "type": "string",
-                        "format": "time"
+                        "format": "time",
+                        "example": "14:00"
+                    },
+                    "waktu_selesai": {
+                        "type": "string",
+                        "format": "time",
+                        "example": "15:00"
                     },
                     "status": {
-                        "description": "Status Janji Temu",
                         "type": "string",
                         "enum": [
-                            "dijadwalkan",
+                            "terjadwal",
                             "selesai",
                             "dibatalkan"
                         ]
                     },
                     "keluhan": {
-                        "description": "Keluhan Pasien",
                         "type": "string"
                     },
                     "pasien": {
@@ -481,17 +563,16 @@
             },
             "CreateJanjiTemuRequest": {
                 "title": "Create Janji Temu Request",
-                "description": "Create Janji Temu request body",
+                "description": "Body request untuk membuat Janji Temu",
                 "required": [
-                    "id_pasien",
                     "id_dokter",
                     "tanggal_janji",
-                    "waktu_janji",
+                    "waktu_mulai",
                     "keluhan"
                 ],
                 "properties": {
                     "id_pasien": {
-                        "description": "ID Pasien",
+                        "description": "Opsional (Otomatis diisi jika login sbg Pasien)",
                         "type": "integer"
                     },
                     "id_dokter": {
@@ -499,34 +580,35 @@
                         "type": "integer"
                     },
                     "tanggal_janji": {
-                        "description": "Tanggal Janji Temu",
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "example": "2025-11-20"
                     },
-                    "waktu_janji": {
-                        "description": "Waktu Janji Temu",
+                    "waktu_mulai": {
+                        "description": "Waktu Mulai (Format HH:mm)",
                         "type": "string",
-                        "format": "time"
+                        "format": "time",
+                        "example": "14:00"
                     },
                     "keluhan": {
                         "description": "Keluhan Pasien",
-                        "type": "string"
+                        "type": "string",
+                        "example": "Sakit kepala dan mual"
                     }
                 },
                 "type": "object"
             },
             "UpdateJanjiTemuStatusRequest": {
                 "title": "Update Janji Temu Status Request",
-                "description": "Update Janji Temu Status request body",
+                "description": "Body request untuk update status",
                 "required": [
                     "status"
                 ],
                 "properties": {
                     "status": {
-                        "description": "Status Janji Temu",
+                        "description": "Status baru",
                         "type": "string",
                         "enum": [
-                            "dijadwalkan",
                             "selesai",
                             "dibatalkan"
                         ]
@@ -534,155 +616,22 @@
                 },
                 "type": "object"
             },
-            "Doctor": {
-                "title": "Doctor",
-                "description": "Doctor model",
-                "properties": {
-                    "id_dokter": {
-                        "description": "ID Dokter",
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "id_pengguna": {
-                        "description": "ID Pengguna",
-                        "type": "integer"
-                    },
-                    "spesialisasi": {
-                        "description": "Spesialisasi Dokter",
-                        "type": "string"
-                    },
-                    "no_lisensi": {
-                        "description": "Nomor Lisensi Dokter",
-                        "type": "string"
-                    },
-                    "biaya_konsultasi": {
-                        "description": "Biaya Konsultasi",
-                        "type": "number",
-                        "format": "float"
-                    },
-                    "pengguna": {
-                        "$ref": "#/components/schemas/Pengguna"
-                    }
-                },
-                "type": "object"
-            },
-            "CreatePatientRequest": {
-                "required": [
-                    "nama",
-                    "email",
-                    "password",
-                    "nomor_telepon",
-                    "alamat",
-                    "jenis_kelamin",
-                    "tanggal_lahir",
-                    "golongan_darah"
-                ],
-                "properties": {
-                    "nama": {
-                        "type": "string",
-                        "example": "John Doe"
-                    },
-                    "email": {
-                        "type": "string",
-                        "format": "email",
-                        "example": "john.doe@example.com"
-                    },
-                    "password": {
-                        "type": "string",
-                        "format": "password",
-                        "minLength": 8,
-                        "example": "password"
-                    },
-                    "nomor_telepon": {
-                        "type": "string",
-                        "maxLength": 20,
-                        "example": "081234567890"
-                    },
-                    "alamat": {
-                        "type": "string",
-                        "example": "123 Main Street"
-                    },
-                    "jenis_kelamin": {
-                        "type": "string",
-                        "enum": [
-                            "Laki-laki",
-                            "Perempuan"
-                        ]
-                    },
-                    "tanggal_lahir": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "1990-01-01"
-                    },
-                    "golongan_darah": {
-                        "type": "string",
-                        "enum": [
-                            "A",
-                            "B",
-                            "AB",
-                            "O"
-                        ]
-                    }
-                },
-                "type": "object"
-            },
-            "UpdatePatientRequest": {
-                "properties": {
-                    "nama": {
-                        "type": "string",
-                        "example": "John Doe"
-                    },
-                    "email": {
-                        "type": "string",
-                        "format": "email",
-                        "example": "john.doe@example.com"
-                    },
-                    "nomor_telepon": {
-                        "type": "string",
-                        "maxLength": 20,
-                        "example": "081234567890"
-                    },
-                    "alamat": {
-                        "type": "string",
-                        "example": "123 Main Street"
-                    },
-                    "jenis_kelamin": {
-                        "type": "string",
-                        "enum": [
-                            "Laki-laki",
-                            "Perempuan"
-                        ]
-                    },
-                    "tanggal_lahir": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "1990-01-01"
-                    },
-                    "golongan_darah": {
-                        "type": "string",
-                        "enum": [
-                            "A",
-                            "B",
-                            "AB",
-                            "O"
-                        ]
-                    }
-                },
-                "type": "object"
-            },
             "Patient": {
+                "title": "Patient",
+                "description": "Model Profil Pasien",
                 "properties": {
                     "id_pasien": {
                         "type": "integer",
                         "example": 1
                     },
-                    "pengguna": {
-                        "$ref": "#/components/schemas/Pengguna"
+                    "id_pengguna": {
+                        "type": "integer",
+                        "example": 1
                     },
                     "tanggal_lahir": {
                         "type": "string",
                         "format": "date",
-                        "example": "1990-01-01"
+                        "example": "2003-12-01"
                     },
                     "golongan_darah": {
                         "type": "string",
@@ -695,12 +644,17 @@
                     },
                     "alamat": {
                         "type": "string",
-                        "example": "123 Main Street"
+                        "example": "jalan avengers"
+                    },
+                    "pengguna": {
+                        "$ref": "#/components/schemas/Pengguna"
                     }
                 },
                 "type": "object"
             },
             "Pengguna": {
+                "title": "Pengguna",
+                "description": "Model Pengguna (data dasar)",
                 "properties": {
                     "id_pengguna": {
                         "type": "integer",
@@ -708,16 +662,16 @@
                     },
                     "nama_lengkap": {
                         "type": "string",
-                        "example": "John Doe"
+                        "example": "Raihan Stark"
                     },
                     "email": {
                         "type": "string",
                         "format": "email",
-                        "example": "john.doe@example.com"
+                        "example": "raihanstark@gmail.com"
                     },
                     "no_telepon": {
                         "type": "string",
-                        "example": "081234567890"
+                        "example": "085156401611"
                     },
                     "role": {
                         "type": "string",
@@ -740,16 +694,16 @@
     },
     "tags": [
         {
-            "name": "Appointments",
-            "description": "Appointments"
-        },
-        {
             "name": "Auth",
             "description": "Auth"
         },
         {
-            "name": "Doctor Schedules",
-            "description": "Doctor Schedules"
+            "name": "Doctors",
+            "description": "Doctors"
+        },
+        {
+            "name": "JanjiTemu",
+            "description": "JanjiTemu"
         },
         {
             "name": "Patients",

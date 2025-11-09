@@ -1,1 +1,39 @@
-<?php\n\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Factories\\HasFactory;\nuse Illuminate\\Database\\Eloquent\\Model;\nuse Illuminate\Database\\Eloquent\\SoftDeletes;\n\nclass TransaksiFarmasi extends Model\n{\n    use HasFactory, SoftDeletes;\n\n    protected $table = \'transaksi_farmasi\';\n    protected $primaryKey = \'id_transaksi\';\n\n    protected $fillable = [\n        \'id_resep\',\n        \'id_apoteker\',\n        \'tanggal_transaksi\',\n        \'total_biaya\',\n        \'status_pembayaran\',\n    ];\n\n    protected $casts = [\n        \'tanggal_transaksi\' => \'date\',\n    ];\n\n    public function resep()\n    {\n        return $this->belongsTo(Resep::class, \'id_resep\');\n    }\n\n    public function apoteker()\n    {\n        return $this->belongsTo(Apoteker::class, \'id_apoteker\');\n    }\n}\n
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class TransaksiFarmasi extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $table = 'transaksi_farmasi';
+    protected $primaryKey = 'id_transaksi';
+
+    protected $fillable = [
+        'id_resep',
+        'id_apoteker',
+        'tanggal_transaksi',
+        'total_harga',
+    ];
+
+    protected $casts = [
+        'tanggal_transaksi' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+    ];
+
+    public function resep()
+    {
+        return $this->belongsTo(Resep::class, 'id_resep', 'id_resep');
+    }
+
+    public function apoteker()
+    {
+        return $this->belongsTo(Apoteker::class, 'id_apoteker', 'id_apoteker');
+    }
+}

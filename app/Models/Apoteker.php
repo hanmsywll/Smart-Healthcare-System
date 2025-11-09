@@ -18,13 +18,19 @@ class Apoteker extends Model
         'no_lisensi',
     ];
 
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+    ];
+
     public function pengguna()
     {
-        return $this->belongsTo(Pengguna::class, 'id_pengguna');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id_pengguna');
     }
 
     public function transaksiFarmasi()
     {
-        return $this->hasMany(TransaksiFarmasi::class, 'id_apoteker');
+        return $this->hasMany(TransaksiFarmasi::class, 'id_apoteker', 'id_apoteker');
     }
 }

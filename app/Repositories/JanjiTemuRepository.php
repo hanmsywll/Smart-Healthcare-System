@@ -3,43 +3,79 @@
 namespace App\Repositories;
 
 use App\Models\JanjiTemu;
+use Carbon\Carbon;
 
 class JanjiTemuRepository
 {
-    public function get(array $filters)
+    public function create($data)
     {
-        $query = JanjiTemu::query()->with(['pasien', 'dokter']);
-
-        if (isset($filters['tanggal_janji'])) {
-            $query->whereDate('tanggal_janji', $filters['tanggal_janji']);
-        }
-
-        if (isset($filters['id_dokter'])) {
-            $query->where('id_dokter', $filters['id_dokter']);
-        }
-
-        if (isset($filters['id_pasien'])) {
-            $query->where('id_pasien', $filters['id_pasien']);
-        }
-
-        return $query->get();
+        return JanjiTemu::create($data);
     }
 
-    public function create(array $data)
+    public function getByDokter($idDokter, $status = null)
     {
-        $janjiTemu = JanjiTemu::create($data);
-        return $janjiTemu->load(['pasien.pengguna', 'dokter.pengguna']);
+        $query = JanjiTemu::where('id_dokter', $idDokter)
+                    ->with(['pasien.pengguna', 'dokter.pengguna']);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query->orderBy('tanggal_janji', 'asc')->orderBy('waktu_mulai', 'asc')->get();
     }
 
-    public function find($id)
+    public function getByPasien($idPasien, $status = null)
     {
-        return JanjiTemu::with(['pasien', 'dokter'])->find($id);
+        $query = JanjiTemu::where('id_pasien', $idPasien)
+                    ->with(['dokter.pengguna', 'pasien.pengguna']);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query->orderBy('tanggal_janji', 'asc')->orderBy('waktu_mulai', 'asc')->get();
     }
 
-    public function updateStatus($id, $status)
+    public function updateStatus($idJanji, $status)
     {
-        $janjiTemu = JanjiTemu::findOrFail($id);
+        $janjiTemu = JanjiTemu::findOrFail($idJanji);
         $janjiTemu->update(['status' => $status]);
         return $janjiTemu;
+    }
+
+    /**
+     * Mengecek bentrokan (overlap).
+     * Rumus: (StartA < EndB) AND (EndA > StartB)
+     */
+    public function checkConflict($idDokter, $tanggal, $waktuMulaiBaru, $waktuSelesaiBaru)
+    {
+        return JanjiTemu::where('id_dokter', $idDokter)
+            ->where('tanggal_janji', $tanggal)
+            ->where('status', '!=', 'dibatalkan')
+            ->where('waktu_mulai', '<', $waktuSelesaiBaru) 
+            ->where('waktu_selesai', '>', $waktuMulaiBaru)
+            ->exists();
+    }
+    
+    /**
+     * Mengambil HANYA jam mulai yang sudah terisi untuk endpoint publik
+     */
+    public function getWaktuTerisi($idDokter, $tanggal)
+    {
+        return JanjiTemu::where('id_dokter', $idDokter)
+            ->where('tanggal_janji', $tanggal)
+            ->where('status', '!=', 'dibatalkan')
+            ->pluck('waktu_mulai')
+            ->map(function ($time) {
+                return Carbon::parse($time)->format('H:i');
+            });
+    }
+
+    /**
+     * Mengambil Janji Temu lengkap dengan relasinya
+     */
+    public function findWithRelations($id)
+    {
+        return JanjiTemu::with(['pasien.pengguna', 'dokter.pengguna'])->findOrFail($id);
     }
 }

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('spesialisasi', 100);
             $table->string('no_lisensi', 100)->unique();
             $table->decimal('biaya_konsultasi', 10, 2)->nullable();
+            $table->enum('shift', ['pagi', 'malam'])->default('pagi');
             $table->timestamps();
             $table->softDeletes();
         });

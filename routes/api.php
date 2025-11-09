@@ -2,6 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\PatientController;
+use App\Http\Controllers\API\DoctorScheduleController;
+use App\Http\Controllers\API\JanjiTemuController;
+use App\Http\Controllers\API\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,9 +18,29 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Default user route (Laravel default)
+// Authentication
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::get('/janji/ketersediaan', [JanjiTemuController::class, 'getKetersediaan']);
+
+Route::get('/status', function () {
+    return response()->json(['status' => 'success', 'message' => 'API is running']);
+});
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    Route::get('/doctors/schedules', [DoctorScheduleController::class, 'index']);
+
+    Route::get('/patients/{id}', [PatientController::class, 'show']);
+
+    Route::apiResource('janji', JanjiTemuController::class);
 });
 
 /*
@@ -33,13 +57,3 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 | Untuk saat ini, file ini dibiarkan kosong untuk development awal.
 |
 */
-
-// API Status Check
-Route::get('/status', function () {
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Smart Healthcare System API is running',
-        'version' => '1.0.0',
-        'timestamp' => now()
-    ]);
-});

@@ -55,6 +55,19 @@ use Exception;
  * @OA\Property(property="message", type="string", example="Pencarian janji temu berhasil"),
  * @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/JanjiTemu"))
  * )
+ *
+ * @OA\Schema(
+ * schema="Doctor",
+ * title="Doctor (Model Lengkap)",
+ * description="Model Doctor lengkap dari database",
+ * @OA\Property(property="id_dokter", type="integer", readOnly=true),
+ * @OA\Property(property="id_pengguna", type="integer"),
+ * @OA\Property(property="spesialisasi", type="string"),
+ * @OA\Property(property="no_lisensi", type="string"),
+ * @OA\Property(property="biaya_konsultasi", type="number", format="float"),
+ * @OA\Property(property="shift", type="string", enum={"pagi", "malam"}),
+ * @OA\Property(property="pengguna", ref="#/components/schemas/Pengguna")
+ * )
  */
 
 class JanjiTemuController extends Controller
@@ -115,10 +128,10 @@ class JanjiTemuController extends Controller
      * required=true,
      * @OA\JsonContent(
      * required={"id_dokter", "tanggal", "waktu_mulai"},
-     * @OA\Property(property="id_dokter", type="integer", description="ID Dokter"),
-     * @OA\Property(property="tanggal", type="string", format="date", description="Tanggal janji temu (YYYY-MM-DD)"),
-     * @OA\Property(property="waktu_mulai", type="string", description="Waktu mulai (HH:mm)"),
-     * @OA\Property(property="keluhan", type="string", description="Keluhan pasien (opsional)")
+     * @OA\Property(property="id_dokter", type="integer", description="ID Dokter", example=1),
+     * @OA\Property(property="tanggal", type="string", format="date", description="Tanggal janji temu (YYYY-MM-DD)", example="2025-11-20"),
+     * @OA\Property(property="waktu_mulai", type="string", description="Waktu mulai (HH:mm) - Format 24 jam", example="09:00"),
+     * @OA\Property(property="keluhan", type="string", description="Keluhan pasien (opsional)", example="Sakit kepala berdenyut dan mual sejak pagi")
      * )
      * ),
      * @OA\Response(
@@ -142,18 +155,43 @@ class JanjiTemuController extends Controller
             $janjiTemu = $this->janjiTemuService->bookingCepat($data, $user);
 
             return response()->json([
-                'message' => 'Janji temu berhasil dibooking',
-                'data' => $janjiTemu
+                'success' => true,
+                'message' => 'Yeay! Janji temu Anda berhasil dibooking 🎉',
+                'data' => $janjiTemu,
+                'timestamp' => now()->toISOString()
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([
-                'error' => 'Validasi gagal',
-                'message' => $e->getMessage()
-            ], 400);
+                'success' => false,
+                'message' => 'Mohon periksa kembali data yang Anda masukkan',
+                'errors' => $e->errors(),
+                'timestamp' => now()->toISOString()
+            ], 422);
         } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+            
+            if (str_contains($errorMessage, 'sudah terisi')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Maaf, slot waktu ini sudah penuh. Silakan pilih waktu lain',
+                    'timestamp' => now()->toISOString()
+                ], 409);
+            }
+            
+            if (str_contains($errorMessage, 'diluar jam kerja')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokter tidak tersedia pada jam ini. Silakan pilih waktu lain',
+                    'timestamp' => now()->toISOString()
+                ], 400);
+            }
+            
             return response()->json([
-                'error' => $e->getMessage()
-            ], 400);
+                'success' => false,
+                'message' => 'Maaf, terjadi kesalahan saat membooking janji temu',
+                'debug' => config('app.debug') ? $errorMessage : null,
+                'timestamp' => now()->toISOString()
+            ], 500);
         }
     }
 
@@ -236,18 +274,33 @@ class JanjiTemuController extends Controller
             if ($user->role === 'pasien') {
                 $pasien = Pasien::where('id_pengguna', $user->id_pengguna)->first();
                 if (!$pasien || $janjiTemu->id_pasien !== $pasien->id_pasien) {
-                    return response()->json(['message' => 'Anda tidak memiliki akses ke janji temu ini'], 403);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Maaf, Anda tidak memiliki akses ke janji temu ini',
+                        'timestamp' => now()->toISOString()
+                    ], 403);
                 }
             }
 
             return response()->json([
-                'message' => 'Janji temu ditemukan',
-                'data' => $janjiTemu
+                'success' => true,
+                'message' => 'Detail janji temu berhasil ditemukan',
+                'data' => $janjiTemu,
+                'timestamp' => now()->toISOString()
             ], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Janji temu tidak ditemukan'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Janji temu tidak ditemukan atau sudah dihapus',
+                'timestamp' => now()->toISOString()
+            ], 404);
         } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Maaf, terjadi kesalahan saat mengambil data janji temu',
+                'debug' => config('app.debug') ? $e->getMessage() : null,
+                'timestamp' => now()->toISOString()
+            ], 500);
         }
     }
 
@@ -290,12 +343,28 @@ class JanjiTemuController extends Controller
             $user = $request->user();
             $results = $this->janjiTemuService->searchJanjiTemu($tanggal, $namaDokter, $user);
             
+            if (empty($results)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Tidak ada janji temu yang sesuai dengan pencarian Anda',
+                    'data' => [],
+                    'timestamp' => now()->toISOString()
+                ], 200);
+            }
+            
             return response()->json([
-                'message' => 'Pencarian janji temu berhasil',
-                'data' => $results
-            ]);
+                'success' => true,
+                'message' => 'Berhasil menemukan ' . count($results) . ' janji temu',
+                'data' => $results,
+                'timestamp' => now()->toISOString()
+            ], 200);
         } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Maaf, terjadi kesalahan saat mencari janji temu',
+                'debug' => config('app.debug') ? $e->getMessage() : null,
+                'timestamp' => now()->toISOString()
+            ], 500);
         }
     }
 
@@ -317,13 +386,11 @@ class JanjiTemuController extends Controller
      * @OA\RequestBody(
      * required=true,
      * @OA\JsonContent(
-     * @OA\Property(property="id_pasien", type="integer", description="ID Pasien (opsional)"),
-     * @OA\Property(property="id_dokter", type="integer", description="ID Dokter (opsional)"),
-     * @OA\Property(property="tanggal_janji", type="string", format="date", description="Tanggal janji (opsional)"),
-     * @OA\Property(property="waktu_mulai", type="string", description="Waktu mulai (opsional)"),
+     * @OA\Property(property="tanggal_janji", type="string", format="date", description="Tanggal janji (opsional)", example="2025-11-20"),
+     * @OA\Property(property="waktu_mulai", type="string", description="Waktu mulai (opsional)", example="10:00"),
      * @OA\Property(property="waktu_selesai", type="string", description="Waktu selesai (opsional)"),
-     * @OA\Property(property="status", type="string", enum={"terjadwal", "selesai", "dibatalkan"}, description="Status (opsional)"),
-     * @OA\Property(property="keluhan", type="string", description="Keluhan pasien (opsional)")
+     * @OA\Property(property="status", type="string", enum={"terjadwal", "selesai", "dibatalkan"}, description="Status (opsional)", example="terjadwal"),
+     * @OA\Property(property="keluhan", type="string", description="Keluhan pasien (opsional)", example="Sakit kepala berdenyut dan mual sejak pagi")
      * )
      * ),
      * @OA\Response(
@@ -349,25 +416,56 @@ class JanjiTemuController extends Controller
             $janjiTemu = $this->janjiTemuService->updateJanjiTemu($id, $data, $user);
 
             return response()->json([
-                'message' => 'Janji temu berhasil diupdate',
-                'data' => $janjiTemu
+                'success' => true,
+                'message' => 'Jadwal janji temu berhasil diperbarui',
+                'data' => $janjiTemu,
+                'timestamp' => now()->toISOString()
             ], 200);
         } catch (ValidationException $e) {
             return response()->json([
-                'error' => 'Validasi gagal',
-                'message' => $e->getMessage()
-            ], 400);
+                'success' => false,
+                'message' => 'Maaf, data yang Anda masukkan tidak valid',
+                'errors' => $e->errors(),
+                'timestamp' => now()->toISOString()
+            ], 422);
         } catch (AuthorizationException $e) {
             return response()->json([
-                'message' => $e->getMessage()
+                'success' => false,
+                'message' => 'Anda tidak memiliki izin untuk memperbarui janji temu ini',
+                'timestamp' => now()->toISOString()
             ], 403);
-        } catch (Exception $e) {
-            if ($e->getMessage() === 'No query results for model [App\Models\JanjiTemu].') {
-                return response()->json(['message' => 'Janji temu tidak ditemukan'], 404);
-            }
+        } catch (ModelNotFoundException $e) {
             return response()->json([
-                'error' => $e->getMessage()
-            ], 400);
+                'success' => false,
+                'message' => 'Janji temu yang Anda cari tidak ditemukan',
+                'timestamp' => now()->toISOString()
+            ], 404);
+        } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+            
+            // Handle specific error messages with user-friendly alternatives
+            if (str_contains($errorMessage, 'sudah ada janji temu')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Maaf, jadwal ini sudah terisi. Silakan pilih waktu lain',
+                    'timestamp' => now()->toISOString()
+                ], 409);
+            }
+            
+            if (str_contains($errorMessage, 'diluar jam kerja')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Maaf, jadwal ini berada di luar jam kerja dokter',
+                    'timestamp' => now()->toISOString()
+                ], 400);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memperbarui janji temu. Silakan coba lagi',
+                'debug' => config('app.debug') ? $errorMessage : null,
+                'timestamp' => now()->toISOString()
+            ], 500);
         }
     }
 
@@ -406,19 +504,29 @@ class JanjiTemuController extends Controller
             $this->janjiTemuService->deleteJanjiTemu($id, $user);
 
             return response()->json([
-                'message' => 'Janji temu berhasil dihapus'
+                'success' => true,
+                'message' => 'Janji temu berhasil dibatalkan',
+                'timestamp' => now()->toISOString()
             ], 200);
         } catch (AuthorizationException $e) {
             return response()->json([
-                'message' => $e->getMessage()
+                'success' => false,
+                'message' => 'Maaf, Anda tidak memiliki izin untuk membatalkan janji temu ini',
+                'timestamp' => now()->toISOString()
             ], 403);
-        } catch (Exception $e) {
-            if ($e->getMessage() === 'No query results for model [App\Models\JanjiTemu].') {
-                return response()->json(['message' => 'Janji temu tidak ditemukan'], 404);
-            }
+        } catch (ModelNotFoundException $e) {
             return response()->json([
-                'error' => $e->getMessage()
-            ], 400);
+                'success' => false,
+                'message' => 'Janji temu tidak ditemukan atau sudah dibatalkan',
+                'timestamp' => now()->toISOString()
+            ], 404);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Maaf, terjadi kesalahan saat membatalkan janji temu',
+                'debug' => config('app.debug') ? $e->getMessage() : null,
+                'timestamp' => now()->toISOString()
+            ], 500);
         }
     }
 }

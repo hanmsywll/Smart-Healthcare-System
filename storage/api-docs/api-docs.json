@@ -85,50 +85,6 @@
                 }
             }
         },
-        "/doctors/schedules": {
-            "get": {
-                "tags": [
-                    "Doctors"
-                ],
-                "summary": "[AMAN] Get list of doctor schedules",
-                "description": "Probis #1, Alur 3: Returns list of doctor schedules",
-                "operationId": "getSchedules",
-                "parameters": [
-                    {
-                        "name": "specialization",
-                        "in": "query",
-                        "description": "Filter by specialization",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/DoctorScheduleResponse"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/janji/ketersediaan-all": {
             "get": {
                 "tags": [
@@ -219,20 +175,24 @@
                                 "properties": {
                                     "id_dokter": {
                                         "description": "ID Dokter",
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "example": 1
                                     },
                                     "tanggal": {
                                         "description": "Tanggal janji temu (YYYY-MM-DD)",
                                         "type": "string",
-                                        "format": "date"
+                                        "format": "date",
+                                        "example": "2025-11-20"
                                     },
                                     "waktu_mulai": {
-                                        "description": "Waktu mulai (HH:mm)",
-                                        "type": "string"
+                                        "description": "Waktu mulai (HH:mm) - Format 24 jam",
+                                        "type": "string",
+                                        "example": "09:00"
                                     },
                                     "keluhan": {
                                         "description": "Keluhan pasien (opsional)",
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Sakit kepala berdenyut dan mual sejak pagi"
                                     }
                                 },
                                 "type": "object"
@@ -387,22 +347,16 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "id_pasien": {
-                                        "description": "ID Pasien (opsional)",
-                                        "type": "integer"
-                                    },
-                                    "id_dokter": {
-                                        "description": "ID Dokter (opsional)",
-                                        "type": "integer"
-                                    },
                                     "tanggal_janji": {
                                         "description": "Tanggal janji (opsional)",
                                         "type": "string",
-                                        "format": "date"
+                                        "format": "date",
+                                        "example": "2025-11-20"
                                     },
                                     "waktu_mulai": {
                                         "description": "Waktu mulai (opsional)",
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "10:00"
                                     },
                                     "waktu_selesai": {
                                         "description": "Waktu selesai (opsional)",
@@ -415,11 +369,13 @@
                                             "terjadwal",
                                             "selesai",
                                             "dibatalkan"
-                                        ]
+                                        ],
+                                        "example": "terjadwal"
                                     },
                                     "keluhan": {
                                         "description": "Keluhan pasien (opsional)",
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Sakit kepala berdenyut dan mual sejak pagi"
                                     }
                                 },
                                 "type": "object"
@@ -648,72 +604,6 @@
     },
     "components": {
         "schemas": {
-            "Doctor": {
-                "title": "Doctor (Model Lengkap)",
-                "description": "Model Doctor lengkap dari database",
-                "properties": {
-                    "id_dokter": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "id_pengguna": {
-                        "type": "integer"
-                    },
-                    "spesialisasi": {
-                        "type": "string"
-                    },
-                    "no_lisensi": {
-                        "type": "string"
-                    },
-                    "biaya_konsultasi": {
-                        "type": "number",
-                        "format": "float"
-                    },
-                    "shift": {
-                        "type": "string",
-                        "enum": [
-                            "pagi",
-                            "malam"
-                        ]
-                    },
-                    "pengguna": {
-                        "$ref": "#/components/schemas/Pengguna"
-                    }
-                },
-                "type": "object"
-            },
-            "DoctorScheduleResponse": {
-                "title": "Doctor Schedule Response",
-                "description": "Data dokter yang disederhanakan untuk ditampilkan di jadwal",
-                "properties": {
-                    "id_dokter": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "nama_lengkap": {
-                        "type": "string",
-                        "example": "Raihan Strange"
-                    },
-                    "spesialisasi": {
-                        "type": "string",
-                        "example": "Ahli Sihir"
-                    },
-                    "shift": {
-                        "type": "string",
-                        "enum": [
-                            "pagi",
-                            "malam"
-                        ],
-                        "example": "pagi"
-                    },
-                    "biaya_konsultasi": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 100000
-                    }
-                },
-                "type": "object"
-            },
             "JanjiTemu": {
                 "title": "Janji Temu (Respons)",
                 "description": "Model Janji Temu (Respons)",
@@ -829,6 +719,40 @@
                         "items": {
                             "$ref": "#/components/schemas/JanjiTemu"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "Doctor": {
+                "title": "Doctor (Model Lengkap)",
+                "description": "Model Doctor lengkap dari database",
+                "properties": {
+                    "id_dokter": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "id_pengguna": {
+                        "type": "integer"
+                    },
+                    "spesialisasi": {
+                        "type": "string"
+                    },
+                    "no_lisensi": {
+                        "type": "string"
+                    },
+                    "biaya_konsultasi": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "shift": {
+                        "type": "string",
+                        "enum": [
+                            "pagi",
+                            "malam"
+                        ]
+                    },
+                    "pengguna": {
+                        "$ref": "#/components/schemas/Pengguna"
                     }
                 },
                 "type": "object"
@@ -951,10 +875,10 @@
                 "scheme": "bearer"
             },
             "sanctum": {
-                "type": "apiKey",
-                "description": "Enter your Bearer token in the format: Bearer {token}",
-                "name": "Authorization",
-                "in": "header"
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "Enter your Sanctum token from /auth/login response. Just paste the token value without \"Bearer\" prefix."
             }
         }
     },
@@ -962,10 +886,6 @@
         {
             "name": "Authentication",
             "description": "Authentication"
-        },
-        {
-            "name": "Doctors",
-            "description": "Doctors"
         },
         {
             "name": "Appointment Management",

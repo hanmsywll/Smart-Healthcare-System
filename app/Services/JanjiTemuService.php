@@ -219,7 +219,7 @@ class JanjiTemuService
         $validator = Validator::make($data, [
             'id_pasien' => 'sometimes|required|integer|exists:pasien,id_pasien',
             'id_dokter' => 'sometimes|required|integer|exists:dokter,id_dokter',
-            'tanggal_janji' => 'sometimes|required|date|after_or_equal:today',
+            'tanggal_janji' => 'sometimes|required|date',
             'waktu_mulai' => 'sometimes|required|string',
             'waktu_selesai' => 'sometimes|required|string',
             'status' => 'sometimes|required|in:terjadwal,selesai,dibatalkan',
@@ -252,6 +252,11 @@ class JanjiTemuService
             if (isset($data['status']) && $data['status'] !== 'selesai') {
                 throw new AuthorizationException('Dokter hanya dapat menandai janji temu sebagai selesai');
             }
+        }
+
+        // Otomatis hitung waktu_selesai jika waktu_mulai diupdate
+        if (isset($data['waktu_mulai']) && !isset($data['waktu_selesai'])) {
+            $data['waktu_selesai'] = Carbon::parse($data['waktu_mulai'])->addHour()->format('H:i:s');
         }
 
         if (isset($data['id_dokter']) || isset($data['waktu_mulai'])) {

@@ -214,10 +214,10 @@ return [
                  * Laravel Sanctum API Token Authentication
                  */
                 'sanctum' => [
-                    'type' => 'apiKey',
-                    'description' => 'Enter your Bearer token in the format: Bearer {token}',
-                    'name' => 'Authorization',
-                    'in' => 'header',
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'Enter your Sanctum token from /auth/login response. Just paste the token value without "Bearer" prefix.',
                 ],
             ],
             'security' => [

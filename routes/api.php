@@ -6,6 +6,7 @@ use App\Http\Controllers\API\PatientController;
 use App\Http\Controllers\API\DoctorScheduleController;
 use App\Http\Controllers\API\JanjiTemuController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\RekamMedisController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/patients/{id}', [PatientController::class, 'show']);
 
     Route::apiResource('janji', JanjiTemuController::class);
+});
+
+Route::prefix('rekam-medis')->group(function () {
+    Route::get('/', [RekamMedisController::class, 'index']);
+    Route::post('/', [RekamMedisController::class, 'store']);
+    Route::get('/{id}', [RekamMedisController::class, 'show']);
+    Route::put('/{id}', [RekamMedisController::class, 'update']);
+    Route::delete('/{id}', [RekamMedisController::class, 'destroy']);
 });
 
 /*

@@ -3,12 +3,11 @@
   "build": {
     "builder": "NIXPACKS",
     "nixpacksConfig": {
-      "providers": ["php", "node"],
+      "providers": ["php", "node", "apacheHttpd"],
       "buildCmds": [
         "npm install",
         "npm run build",
         "composer install --no-dev --optimize-autoloader",
-        "php artisan migrate --force",
         "php artisan l5-swagger:generate"
       ]
     }

@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Environment
+.env
+.env.example
+.env.testing
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Storage
+/storage/
+!/storage/app/public/
+
+# Cache
+/bootstrap/cache/
+
+# Logs
+/storage/logs/
+
+# Testing
+.phpunit.result.cache

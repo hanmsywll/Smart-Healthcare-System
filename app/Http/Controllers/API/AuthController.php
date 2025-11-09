@@ -16,7 +16,7 @@ class AuthController extends Controller
      * summary="Sign in",
      * description="Login by email, password",
      * operationId="authLogin",
-     * tags={"Auth"},
+     * tags={"Authentication"},
      * @OA\RequestBody(
      * required=true,
      * description="Pass user credentials",

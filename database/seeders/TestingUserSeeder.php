@@ -31,6 +31,23 @@ class TestingUserSeeder extends Seeder
             'biaya_konsultasi' => 100000,
         ]);
 
+        // Create Doctor RaihanWong - Shift Malam
+        $dokterMalamPengguna = Pengguna::create([
+            'email' => 'raihanwong@clinic.com',
+            'password_hash' => Hash::make('qwerty123'),
+            'role' => 'dokter',
+            'nama_lengkap' => 'Raihan Wong',
+            'no_telepon' => '081234567890',
+        ]);
+
+        Dokter::create([
+            'id_pengguna' => $dokterMalamPengguna->id_pengguna,
+            'spesialisasi' => 'Umum',
+            'no_lisensi' => '87654321',
+            'biaya_konsultasi' => 150000,
+            'shift' => 'malam',
+        ]);
+
         // Create Patient
         $pasienPengguna = Pengguna::create([
             'email' => 'raihanstark@gmail.com',

@@ -2,6 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\PatientController;
+use App\Http\Controllers\API\DoctorScheduleController;
+use App\Http\Controllers\API\AppointmentController;
+use App\Http\Controllers\API\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,9 +18,23 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Authentication
+Route::post('/auth/login', [AuthController::class, 'login']);
+
 // Default user route (Laravel default)
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Patient Registration
+    Route::post('/patients', [PatientController::class, 'store']);
+    Route::get('/patients/{id}', [PatientController::class, 'show']);
+    Route::put('/patients/{id}', [PatientController::class, 'update']);
+
+    // Doctor Scheduling
+    Route::get('/doctors/schedules', [DoctorScheduleController::class, 'index']);
+    Route::apiResource('appointments', AppointmentController::class);
 });
 
 /*

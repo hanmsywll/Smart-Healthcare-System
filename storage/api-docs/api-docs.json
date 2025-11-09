@@ -1,0 +1,759 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Smart Healthcare System API",
+        "description": "API for Smart Healthcare System",
+        "contact": {
+            "email": "support@smart-healthcare.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api"
+        },
+        {
+            "url": "/api"
+        }
+    ],
+    "paths": {
+        "/appointments": {
+            "get": {
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Get list of appointments",
+                "description": "Returns list of appointments",
+                "operationId": "getAppointments",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Filter by date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/JanjiTemu"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Create a new appointment",
+                "description": "Returns the created appointment data",
+                "operationId": "createAppointment",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateJanjiTemuRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JanjiTemu"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            }
+        },
+        "/appointments/{id}": {
+            "get": {
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Get appointment information",
+                "description": "Returns appointment data",
+                "operationId": "getAppointmentById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Appointment id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/appointments/{id}/status": {
+            "patch": {
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Update appointment status",
+                "description": "Returns updated appointment data",
+                "operationId": "updateAppointmentStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Appointment id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateJanjiTemuStatusRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JanjiTemu"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Sign in",
+                "description": "Login by email, password",
+                "operationId": "authLogin",
+                "requestBody": {
+                    "description": "Pass user credentials",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "raihanstark@gmail.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "qwerty123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The email field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid credentials"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/doctors/schedules": {
+            "get": {
+                "tags": [
+                    "Doctor Schedules"
+                ],
+                "summary": "Get list of doctor schedules",
+                "description": "Returns list of doctor schedules",
+                "operationId": "getSchedules",
+                "parameters": [
+                    {
+                        "name": "specialization",
+                        "in": "query",
+                        "description": "Filter by specialization",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Doctor"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/patients": {
+            "post": {
+                "tags": [
+                    "Patients"
+                ],
+                "summary": "Create a new patient",
+                "description": "Returns the created patient data",
+                "operationId": "createPatient",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePatientRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Patient"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            }
+        },
+        "/patients/{id}": {
+            "get": {
+                "tags": [
+                    "Patients"
+                ],
+                "summary": "Get patient information",
+                "description": "Returns patient data",
+                "operationId": "getPatientById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Patient id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Patient"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Patients"
+                ],
+                "summary": "Update existing patient",
+                "description": "Returns updated patient data",
+                "operationId": "updatePatient",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Patient id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePatientRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Patient"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "JanjiTemu": {
+                "title": "Janji Temu",
+                "description": "Janji Temu model",
+                "properties": {
+                    "id_janji_temu": {
+                        "description": "ID Janji Temu",
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "id_pasien": {
+                        "description": "ID Pasien",
+                        "type": "integer"
+                    },
+                    "id_dokter": {
+                        "description": "ID Dokter",
+                        "type": "integer"
+                    },
+                    "tanggal_janji": {
+                        "description": "Tanggal Janji Temu",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "waktu_janji": {
+                        "description": "Waktu Janji Temu",
+                        "type": "string",
+                        "format": "time"
+                    },
+                    "status": {
+                        "description": "Status Janji Temu",
+                        "type": "string",
+                        "enum": [
+                            "dijadwalkan",
+                            "selesai",
+                            "dibatalkan"
+                        ]
+                    },
+                    "keluhan": {
+                        "description": "Keluhan Pasien",
+                        "type": "string"
+                    },
+                    "pasien": {
+                        "$ref": "#/components/schemas/Patient"
+                    },
+                    "dokter": {
+                        "$ref": "#/components/schemas/Doctor"
+                    }
+                },
+                "type": "object"
+            },
+            "CreateJanjiTemuRequest": {
+                "title": "Create Janji Temu Request",
+                "description": "Create Janji Temu request body",
+                "required": [
+                    "id_pasien",
+                    "id_dokter",
+                    "tanggal_janji",
+                    "waktu_janji",
+                    "keluhan"
+                ],
+                "properties": {
+                    "id_pasien": {
+                        "description": "ID Pasien",
+                        "type": "integer"
+                    },
+                    "id_dokter": {
+                        "description": "ID Dokter",
+                        "type": "integer"
+                    },
+                    "tanggal_janji": {
+                        "description": "Tanggal Janji Temu",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "waktu_janji": {
+                        "description": "Waktu Janji Temu",
+                        "type": "string",
+                        "format": "time"
+                    },
+                    "keluhan": {
+                        "description": "Keluhan Pasien",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateJanjiTemuStatusRequest": {
+                "title": "Update Janji Temu Status Request",
+                "description": "Update Janji Temu Status request body",
+                "required": [
+                    "status"
+                ],
+                "properties": {
+                    "status": {
+                        "description": "Status Janji Temu",
+                        "type": "string",
+                        "enum": [
+                            "dijadwalkan",
+                            "selesai",
+                            "dibatalkan"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "Doctor": {
+                "title": "Doctor",
+                "description": "Doctor model",
+                "properties": {
+                    "id_dokter": {
+                        "description": "ID Dokter",
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "id_pengguna": {
+                        "description": "ID Pengguna",
+                        "type": "integer"
+                    },
+                    "spesialisasi": {
+                        "description": "Spesialisasi Dokter",
+                        "type": "string"
+                    },
+                    "no_lisensi": {
+                        "description": "Nomor Lisensi Dokter",
+                        "type": "string"
+                    },
+                    "biaya_konsultasi": {
+                        "description": "Biaya Konsultasi",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "pengguna": {
+                        "$ref": "#/components/schemas/Pengguna"
+                    }
+                },
+                "type": "object"
+            },
+            "CreatePatientRequest": {
+                "required": [
+                    "nama",
+                    "email",
+                    "password",
+                    "nomor_telepon",
+                    "alamat",
+                    "jenis_kelamin",
+                    "tanggal_lahir",
+                    "golongan_darah"
+                ],
+                "properties": {
+                    "nama": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "minLength": 8,
+                        "example": "password"
+                    },
+                    "nomor_telepon": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "example": "081234567890"
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "example": "123 Main Street"
+                    },
+                    "jenis_kelamin": {
+                        "type": "string",
+                        "enum": [
+                            "Laki-laki",
+                            "Perempuan"
+                        ]
+                    },
+                    "tanggal_lahir": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1990-01-01"
+                    },
+                    "golongan_darah": {
+                        "type": "string",
+                        "enum": [
+                            "A",
+                            "B",
+                            "AB",
+                            "O"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UpdatePatientRequest": {
+                "properties": {
+                    "nama": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com"
+                    },
+                    "nomor_telepon": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "example": "081234567890"
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "example": "123 Main Street"
+                    },
+                    "jenis_kelamin": {
+                        "type": "string",
+                        "enum": [
+                            "Laki-laki",
+                            "Perempuan"
+                        ]
+                    },
+                    "tanggal_lahir": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1990-01-01"
+                    },
+                    "golongan_darah": {
+                        "type": "string",
+                        "enum": [
+                            "A",
+                            "B",
+                            "AB",
+                            "O"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "Patient": {
+                "properties": {
+                    "id_pasien": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "pengguna": {
+                        "$ref": "#/components/schemas/Pengguna"
+                    },
+                    "tanggal_lahir": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1990-01-01"
+                    },
+                    "golongan_darah": {
+                        "type": "string",
+                        "enum": [
+                            "A",
+                            "B",
+                            "AB",
+                            "O"
+                        ]
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "example": "123 Main Street"
+                    }
+                },
+                "type": "object"
+            },
+            "Pengguna": {
+                "properties": {
+                    "id_pengguna": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nama_lengkap": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com"
+                    },
+                    "no_telepon": {
+                        "type": "string",
+                        "example": "081234567890"
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": "pasien"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "apiAuth": {
+                "type": "http",
+                "description": "Login with email and password to get the authentication token",
+                "name": "Token based Based",
+                "in": "header",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Appointments",
+            "description": "Appointments"
+        },
+        {
+            "name": "Auth",
+            "description": "Auth"
+        },
+        {
+            "name": "Doctor Schedules",
+            "description": "Doctor Schedules"
+        },
+        {
+            "name": "Patients",
+            "description": "Patients"
+        }
+    ]
+}

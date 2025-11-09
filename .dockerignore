@@ -21,7 +21,7 @@ Dockerfile
 !/storage/app/public/
 
 # Cache
-/bootstrap/cache/
+/bootstrap/cache/*
 
 # Logs
 /storage/logs/

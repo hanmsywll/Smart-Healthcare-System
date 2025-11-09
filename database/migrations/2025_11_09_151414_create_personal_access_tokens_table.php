@@ -22,8 +22,8 @@ return new class extends Migration
             $table->timestamps();
 
             // Index dari SQL dump Anda
-            $table->index(['tokenable_type', 'tokenable_id']);
-            $table->index('expires_at');
+            // $table->index(['tokenable_type', 'tokenable_id']);
+            // $table->index('expires_at');
         });
     }
 

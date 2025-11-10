@@ -19,6 +19,8 @@ use App\Http\Controllers\API\UserController;
 
 // Authentication
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/register/pasien', [AuthController::class, 'registerPasien']);
+Route::post('/auth/register/dokter', [AuthController::class, 'registerDokter']);
 
 // Public routes
 Route::get('/janji/ketersediaan-all', [JanjiTemuController::class, 'getAllKetersediaan']);

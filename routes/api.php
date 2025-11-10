@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\JanjiTemuController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\StatusController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,9 +26,7 @@ Route::post('/auth/register/dokter', [AuthController::class, 'registerDokter']);
 // Public routes
 Route::get('/janji/ketersediaan-all', [JanjiTemuController::class, 'getAllKetersediaan']);
 
-Route::get('/status', function () {
-    return response()->json(['status' => 'success', 'message' => 'API is running']);
-});
+Route::get('/status', [StatusController::class, 'index']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

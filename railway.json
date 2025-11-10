@@ -5,8 +5,7 @@
     "nixpacksConfig": {
       "providers": ["php", "node"],
       "buildCmds": [
-        "npm install",
-        "npm run build",
+        "cd src/Medical_frontend && npm install && npm run build",
         "composer install --no-dev --optimize-autoloader",
         "php artisan l5-swagger:generate"
       ]

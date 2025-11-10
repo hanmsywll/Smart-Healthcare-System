@@ -20,7 +20,7 @@ use App\Http\Controllers\API\RekamMedisController;
 */
 
 // Authentication
-Route::post('/auth/login', [AuthController::class, 'login']);
+//Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/janji/ketersediaan', [JanjiTemuController::class, 'getKetersediaan']);
 
 Route::get('/status', function () {
@@ -50,6 +50,13 @@ Route::prefix('rekam-medis')->group(function () {
     Route::get('/{id}', [RekamMedisController::class, 'show']);
     Route::put('/{id}', [RekamMedisController::class, 'update']);
     Route::delete('/{id}', [RekamMedisController::class, 'destroy']);
+});
+
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
+    Route::get('/me', [AuthController::class, 'me'])->middleware('auth:api');
 });
 
 /*

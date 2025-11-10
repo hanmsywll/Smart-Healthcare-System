@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Pengguna;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -59,5 +60,43 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer',
         ]);
+    }
+
+    // Registrasi akun
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email|unique:pengguna,email',
+            'password' => 'required|min:6',
+            'role' => 'required|in:pasien,dokter,apoteker,admin',
+            'nama_lengkap' => 'required|string',
+            'no_telepon' => 'nullable|string|max:20',
+        ]);
+
+        $pengguna = Pengguna::create([
+            'email' => $validated['email'],
+            'password_hash' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+            'nama_lengkap' => $validated['nama_lengkap'],
+            'no_telepon' => $validated['no_telepon'] ?? null,
+        ]);
+
+        return response()->json([
+            'message' => 'Registrasi berhasil',
+            'data' => $pengguna
+        ], 201);
+    }
+
+    // Logout
+    public function logout()
+    {
+        auth()->logout();
+        return response()->json(['message' => 'Logout berhasil']);
+    }
+
+    // Cek user login
+    public function me()
+    {
+        return response()->json(auth()->user());
     }
 }

@@ -4,8 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\JanjiTemuController;
 use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\StatusController;
+use App\Http\Controllers\API\RekamMedisController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,9 +18,8 @@ use App\Http\Controllers\API\StatusController;
 */
 
 // Authentication
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/register/pasien', [AuthController::class, 'registerPasien']);
-Route::post('/auth/register/dokter', [AuthController::class, 'registerDokter']);
+//Route::post('/auth/login', [AuthController::class, 'login']);
+Route::get('/janji/ketersediaan', [JanjiTemuController::class, 'getKetersediaan']);
 
 // Public routes
 Route::get('/janji/ketersediaan-all', [JanjiTemuController::class, 'getAllKetersediaan']);

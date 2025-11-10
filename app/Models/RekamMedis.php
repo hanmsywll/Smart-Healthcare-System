@@ -14,17 +14,30 @@ class RekamMedis extends Model
     protected $primaryKey = 'id_rekam_medis';
 
     protected $fillable = [
+        'id_pasien',
+        'id_dokter',
         'id_janji_temu',
-        'catatan_konsultasi',
+        'tanggal_kunjungan',
+        'diagnosis',
+        'tindakan',
+        'catatan',
     ];
 
-    public function janjiTemu()
+    // Relasi ke tabel Pasien
+    public function pasien()
     {
-        return $this->belongsTo(JanjiTemu::class, 'id_janji_temu');
+        return $this->belongsTo(Pasien::class, 'id_pasien', 'id_pasien');
     }
 
-    public function resep()
+    // Relasi ke tabel Dokter
+    public function dokter()
     {
-        return $this->hasOne(Resep::class, 'id_rekam_medis');
+        return $this->belongsTo(Dokter::class, 'id_dokter', 'id_dokter');
+    }
+
+    // Relasi ke tabel JanjiTemu
+    public function janjiTemu()
+    {
+        return $this->belongsTo(JanjiTemu::class, 'id_janji_temu', 'id_janji_temu');
     }
 }

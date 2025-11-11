@@ -26,8 +26,8 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Sign in",
-                "description": "Login by email, password",
+                "summary": "Sign in (Raihan)",
+                "description": "Login dengan email dan password. Jika ingin login sebagai pasien, maka bisa pakai akun berikut: raihanstark@gmail.com dgn password qwerty123. jika ingin login sebagai dokter, menggunakan raihanloki@gmail.com dgn password qwerty123",
                 "operationId": "authLogin",
                 "requestBody": {
                     "description": "Pass user credentials",
@@ -77,22 +77,629 @@
                         }
                     },
                     "401": {
-                        "description": "Invalid credentials"
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid credentials"
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The provided credentials do not match our records."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Isian email wajib diisi. (and 1 more error)"
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Isian email wajib diisi."
+                                                    }
+                                                },
+                                                "password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Isian password wajib diisi."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
-        "/janji/ketersediaan-all": {
+        "/auth/register/pasien": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register Pasien (Raihan)",
+                "description": "Mendaftarkan akun baru sebagai pasien dan langsung mengembalikan token akses.",
+                "operationId": "registerPasien",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "nama_lengkap"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "raihanstark@gmail.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "qwerty123"
+                                    },
+                                    "nama_lengkap": {
+                                        "type": "string",
+                                        "example": "Budi Santoso"
+                                    },
+                                    "no_telepon": {
+                                        "type": "string",
+                                        "example": "081234567890"
+                                    },
+                                    "tanggal_lahir": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2000-05-10"
+                                    },
+                                    "golongan_darah": {
+                                        "type": "string",
+                                        "example": "O"
+                                    },
+                                    "alamat": {
+                                        "type": "string",
+                                        "example": "Jl. Mawar No. 1 Jakarta"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Registration successful"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id_pengguna": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "raihanstark@gmail.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "pasien"
+                                                },
+                                                "nama_lengkap": {
+                                                    "type": "string",
+                                                    "example": "Budi Santoso"
+                                                },
+                                                "no_telepon": {
+                                                    "type": "string",
+                                                    "example": "081234567890"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "pasien": {
+                                            "properties": {
+                                                "id_pasien": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "tanggal_lahir": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2000-05-10"
+                                                },
+                                                "golongan_darah": {
+                                                    "type": "string",
+                                                    "example": "O"
+                                                },
+                                                "alamat": {
+                                                    "type": "string",
+                                                    "example": "Jl. Mawar No. 1 Jakarta"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The email has already been taken."
+                                                    }
+                                                },
+                                                "password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The password must be at least 6 characters."
+                                                    }
+                                                },
+                                                "nama_lengkap": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The nama lengkap field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register/dokter": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register Dokter (Raihan)",
+                "description": "Mendaftarkan akun baru sebagai dokter dan langsung mengembalikan token akses.",
+                "operationId": "registerDokter",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "nama_lengkap",
+                                    "spesialisasi",
+                                    "no_lisensi"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "raihanloki@gmail.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "qwerty123"
+                                    },
+                                    "nama_lengkap": {
+                                        "type": "string",
+                                        "example": "Dr. Siti"
+                                    },
+                                    "no_telepon": {
+                                        "type": "string",
+                                        "example": "081298765432"
+                                    },
+                                    "spesialisasi": {
+                                        "type": "string",
+                                        "example": "Anak"
+                                    },
+                                    "no_lisensi": {
+                                        "type": "string",
+                                        "example": "ABCD-1234"
+                                    },
+                                    "biaya_konsultasi": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 150000
+                                    },
+                                    "shift": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pagi",
+                                            "malam"
+                                        ],
+                                        "example": "pagi"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Registration successful"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id_pengguna": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "raihanloki@gmail.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "dokter"
+                                                },
+                                                "nama_lengkap": {
+                                                    "type": "string",
+                                                    "example": "Dr. Siti"
+                                                },
+                                                "no_telepon": {
+                                                    "type": "string",
+                                                    "example": "081298765432"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "dokter": {
+                                            "properties": {
+                                                "id_dokter": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "spesialisasi": {
+                                                    "type": "string",
+                                                    "example": "Anak"
+                                                },
+                                                "no_lisensi": {
+                                                    "type": "string",
+                                                    "example": "ABCD-1234"
+                                                },
+                                                "biaya_konsultasi": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 150000
+                                                },
+                                                "shift": {
+                                                    "type": "string",
+                                                    "example": "pagi"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The email has already been taken."
+                                                    }
+                                                },
+                                                "password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The password must be at least 6 characters."
+                                                    }
+                                                },
+                                                "spesialisasi": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The spesialisasi field is required."
+                                                    }
+                                                },
+                                                "no_lisensi": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The no lisensi has already been taken."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout (Raihan)",
+                "description": "Menghapus token akses saat ini. Perlu autentikasi.",
+                "operationId": "authLogout",
+                "responses": {
+                    "200": {
+                        "description": "Successfully logged out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully logged out"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/change-password-public": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "[PUBLIK] Ganti password langsung berdasarkan email (tanpa login, tanpa OTP) (Raihan)",
+                "description": "Endpoint publik untuk mengganti password hanya bermodal email dan password baru. Disarankan hanya diaktifkan untuk lingkungan pengembangan. Terkendali oleh env ALLOW_PUBLIC_PASSWORD_CHANGE.",
+                "operationId": "changePasswordPublicByEmail",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "new_password",
+                                    "new_password_confirmation"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "raihanstark@gmail.com"
+                                    },
+                                    "new_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "passwordBaru123"
+                                    },
+                                    "new_password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "passwordBaru123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password berhasil diubah",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password berhasil diubah"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Disabled by environment",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Fitur ini dinonaktifkan oleh konfigurasi environment"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The email field must be a valid email address."
+                                                    }
+                                                },
+                                                "new_password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The new password must be at least 8 characters."
+                                                    }
+                                                },
+                                                "new_password_confirmation": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The new password confirmation does not match."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/janji/ketersediaan": {
             "get": {
                 "tags": [
                     "Appointment Management"
                 ],
-                "summary": "[PUBLIK] Cek semua ketersediaan dokter",
+                "summary": "[PUBLIK] Cek semua ketersediaan dokter (Raihan)",
                 "description": "Endpoint publik untuk melihat ketersediaan semua dokter untuk 7 hari ke depan tanpa parameter.",
-                "operationId": "getAllKetersediaan",
+                "operationId": "getKetersediaan",
                 "responses": {
                     "200": {
                         "description": "Daftar ketersediaan semua dokter",
@@ -149,19 +756,130 @@
                         }
                     },
                     "500": {
-                        "description": "Server error"
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Terjadi kesalahan server"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
-        "/janji/booking-cepat": {
+        "/janji": {
+            "get": {
+                "tags": [
+                    "Appointment Management"
+                ],
+                "summary": "[AMAN] Daftar janji temu (Raihan)",
+                "description": "Endpoint untuk mendapatkan semua janji temu (Admin/Dokter bisa lihat semua, Pasien hanya lihat miliknya)",
+                "operationId": "listJanjiTemu",
+                "parameters": [
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Urutkan berdasarkan tanggal dan waktu janji: 'terbaru'/'desc' atau 'terlama'/'asc'",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "terbaru",
+                                "terlama",
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar semua janji temu",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/JanjiTemu"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Data role tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data pasien tidak ditemukan"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Terjadi kesalahan server"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
             "post": {
                 "tags": [
                     "Appointment Management"
                 ],
-                "summary": "[AMAN] Booking Janji Temu Cepat",
+                "summary": "[AMAN] Booking Janji Temu Cepat (Raihan)",
                 "description": "Endpoint untuk membuat janji temu secara cepat dengan validasi slot tersedia",
-                "operationId": "bookingCepat",
+                "operationId": "buatJanjiTemu",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -221,10 +939,166 @@
                         }
                     },
                     "400": {
-                        "description": "Slot sudah terisi atau error validasi"
+                        "description": "Di luar jam kerja dokter atau waktu sudah terlewat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dokter tidak tersedia pada jam ini. Silakan pilih waktu lain"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "example": "2025-11-20T09:15:30Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Slot waktu sudah penuh atau bertabrakan dengan janji lain",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maaf, jadwal ini bertabrakan dengan janji dokter tersebut"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "example": "2025-11-20T09:15:30Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: hanya pasien yang boleh membuat janji",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Hanya pasien yang dapat membuat janji temu"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "example": "2025-11-20T09:15:30Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mohon periksa kembali data yang Anda masukkan"
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "id_dokter": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The id dokter field is required."
+                                                    }
+                                                },
+                                                "tanggal": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The tanggal field must be a valid date."
+                                                    }
+                                                },
+                                                "waktu_mulai": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The waktu mulai field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "example": "2025-11-20T09:15:30Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maaf, terjadi kesalahan saat membooking janji temu"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "example": "2025-11-20T09:15:30Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -234,26 +1108,36 @@
                 ]
             }
         },
-        "/janji": {
+        "/janji/statistik": {
             "get": {
                 "tags": [
                     "Appointment Management"
                 ],
-                "summary": "[AMAN] Dapatkan semua janji temu",
-                "description": "Endpoint untuk mendapatkan semua janji temu (Admin/Dokter bisa lihat semua, Pasien hanya lihat miliknya)",
-                "operationId": "getAllJanjiTemu",
+                "summary": "[AMAN] Statistik janji temu (total & aktif) (Raihan)",
+                "description": "Mengembalikan jumlah total janji temu dan jumlah janji temu aktif sesuai role pengguna yang sedang login.",
+                "operationId": "getStatistikJanjiTemu",
                 "responses": {
                     "200": {
-                        "description": "Daftar semua janji temu",
+                        "description": "Statistik janji temu",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/JanjiTemu"
-                                            }
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 42
+                                        },
+                                        "aktif": {
+                                            "type": "integer",
+                                            "example": 17
+                                        },
+                                        "selesai": {
+                                            "type": "integer",
+                                            "example": 12
+                                        },
+                                        "dibatalkan": {
+                                            "type": "integer",
+                                            "example": 13
                                         }
                                     },
                                     "type": "object"
@@ -262,7 +1146,64 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Data role tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data pasien tidak ditemukan"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Terjadi kesalahan server"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "example": "2025-11-20T09:15:30Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -277,9 +1218,9 @@
                 "tags": [
                     "Appointment Management"
                 ],
-                "summary": "[AMAN] Lihat detail janji temu",
+                "summary": "[AMAN] Lihat detail janji temu (Raihan)",
                 "description": "Endpoint untuk melihat detail janji temu berdasarkan ID.",
-                "operationId": "getJanjiTemuById",
+                "operationId": "getDetailJanjiTemu",
                 "parameters": [
                     {
                         "name": "id",
@@ -308,13 +1249,80 @@
                         }
                     },
                     "404": {
-                        "description": "Janji temu tidak ditemukan"
+                        "description": "Janji temu tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Janji temu tidak ditemukan atau sudah dihapus"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Tidak memiliki akses"
+                        "description": "Tidak memiliki akses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maaf, Anda tidak memiliki akses ke janji temu ini"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maaf, terjadi kesalahan saat mengambil data janji temu"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -327,9 +1335,9 @@
                 "tags": [
                     "Appointment Management"
                 ],
-                "summary": "[AMAN] Update janji temu",
-                "description": "Endpoint untuk memperbarui janji temu.",
-                "operationId": "updateJanjiTemu",
+                "summary": "[AMAN] Update janji temu (Raihan)",
+                "description": "Update janji temu dengan aturan peran:\n     * \\n- Pasien: edit keluhan/tanggal/waktu/dokter, bukan status; tidak boleh ubah janji yang sudah selesai/dibatalkan; wajib patuh shift dan anti-overlap.\n     * \\n- Dokter: hanya bisa menandai selesai (butuh rekam medis) atau assign id_dokter ke dokter lain dengan shift sama; hanya untuk janji terjadwal; patuh shift dan anti-overlap.",
+                "operationId": "ubahJanjiTemu",
                 "parameters": [
                     {
                         "name": "id",
@@ -379,6 +1387,35 @@
                                     }
                                 },
                                 "type": "object"
+                            },
+                            "examples": {
+                                "Pasien_Ubah": {
+                                    "summary": "Reschedule & edit keluhan oleh pasien",
+                                    "value": {
+                                        "keluhan": "Nyeri perut ringan sejak kemarin",
+                                        "tanggal_janji": "2025-11-21",
+                                        "waktu_mulai": "09:00",
+                                        "id_dokter": 2
+                                    }
+                                },
+                                "Pasien_GantiDokter": {
+                                    "summary": "Ganti dokter oleh pasien",
+                                    "value": {
+                                        "id_dokter": 5
+                                    }
+                                },
+                                "Dokter_TandaiSelesai": {
+                                    "summary": "Dokter menandai janji selesai",
+                                    "value": {
+                                        "status": "selesai"
+                                    }
+                                },
+                                "Dokter_AssignShiftSama": {
+                                    "summary": "Dokter assign ke dokter lain (shift sama)",
+                                    "value": {
+                                        "id_dokter": 7
+                                    }
+                                }
                             }
                         }
                     }
@@ -404,16 +1441,136 @@
                         }
                     },
                     "400": {
-                        "description": "Validasi gagal"
+                        "description": "Validasi gagal",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maaf, data yang Anda masukkan tidak valid"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "tanggal_janji": [
+                                                    "The tanggal janji field must be a valid date."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Tidak memiliki akses"
+                        "description": "Tidak memiliki akses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Anda tidak memiliki izin untuk memperbarui janji temu ini"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Konflik jadwal / slot terisi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maaf, jadwal ini bertabrakan dengan janji dokter tersebut"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Janji temu tidak ditemukan"
+                        "description": "Janji temu tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Janji temu yang Anda cari tidak ditemukan"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maaf, data yang Anda masukkan tidak valid"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "waktu_mulai": [
+                                                    "The waktu mulai field is required."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -426,9 +1583,9 @@
                 "tags": [
                     "Appointment Management"
                 ],
-                "summary": "[AMAN] Hapus janji temu",
-                "description": "Endpoint untuk menghapus janji temu (soft delete).",
-                "operationId": "deleteJanjiTemu",
+                "summary": "[AMAN] Hapus janji temu (Raihan)",
+                "description": "Endpoint untuk membatalkan janji temu (mengubah status menjadi 'dibatalkan').",
+                "operationId": "hapusJanjiTemu",
                 "parameters": [
                     {
                         "name": "id",
@@ -458,13 +1615,80 @@
                         }
                     },
                     "403": {
-                        "description": "Tidak memiliki akses"
+                        "description": "Tidak memiliki akses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maaf, Anda tidak memiliki izin untuk membatalkan janji temu ini"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Janji temu tidak ditemukan"
+                        "description": "Janji temu tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Janji temu tidak ditemukan atau sudah dibatalkan"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Tidak dapat membatalkan janji temu yang sudah selesai",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tidak dapat membatalkan janji temu yang sudah selesai"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -474,14 +1698,14 @@
                 ]
             }
         },
-        "/janji/search": {
+        "/janji/cari": {
             "get": {
                 "tags": [
                     "Appointment Management"
                 ],
-                "summary": "[AMAN] Cari janji temu",
-                "description": "Endpoint untuk mencari janji temu berdasarkan tanggal dan/atau nama dokter.",
-                "operationId": "searchJanjiTemu",
+                "summary": "[AMAN] Cari janji temu (Raihan)",
+                "description": "Endpoint untuk mencari janji temu berdasarkan tanggal dan/atau nama. Dokter & Pasien dapat memfilter dengan 'nama_dokter' dan/atau 'nama_pasien' (hasil tetap dibatasi milik sendiri); Admin dapat menggunakan keduanya tanpa batasan.",
+                "operationId": "cariJanjiTemu",
                 "parameters": [
                     {
                         "name": "tanggal",
@@ -503,6 +1727,16 @@
                             "type": "string",
                             "example": "Raihan"
                         }
+                    },
+                    {
+                        "name": "nama_pasien",
+                        "in": "query",
+                        "description": "Filter berdasarkan nama pasien (partial match) — khusus Pasien/Admin",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Budi"
+                        }
                     }
                 ],
                 "responses": {
@@ -517,7 +1751,40 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthenticated"
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Maaf, terjadi kesalahan saat mencari janji temu"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -569,6 +1836,38 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/status": {
+            "get": {
+                "tags": [
+                    "Status"
+                ],
+                "summary": "[PUBLIK] Cek status API",
+                "description": "Mengembalikan status sederhana untuk memverifikasi API berjalan.",
+                "operationId": "getApiStatus",
+                "responses": {
+                    "200": {
+                        "description": "API is running",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "API is running"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/user": {
@@ -894,6 +2193,10 @@
         {
             "name": "Patients",
             "description": "Patients"
+        },
+        {
+            "name": "Status",
+            "description": "Status"
         },
         {
             "name": "User Profile",

@@ -85,7 +85,7 @@ class JanjiTemuController extends Controller
      * path="/janji/ketersediaan",
      * operationId="getKetersediaan",
      * tags={"Appointment Management"},
-     * summary="[PUBLIK] Cek semua ketersediaan dokter",
+     * summary="[PUBLIK] Cek semua ketersediaan dokter (Raihan)",
      * description="Endpoint publik untuk melihat ketersediaan semua dokter untuk 7 hari ke depan tanpa parameter.",
      * @OA\Response(
      * response=200,
@@ -104,7 +104,13 @@ class JanjiTemuController extends Controller
      * ))
      * ))
      * ),
-     * @OA\Response(response=500, description="Server error")
+     * @OA\Response(
+     *   response=500,
+     *   description="Server error",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="message", type="string", example="Terjadi kesalahan server")
+     *   )
+     * )
      * )
      */
     public function getKetersediaan(Request $request)
@@ -122,7 +128,7 @@ class JanjiTemuController extends Controller
      * path="/janji",
      * operationId="buatJanjiTemu",
      * tags={"Appointment Management"},
-     * summary="[AMAN] Booking Janji Temu Cepat",
+     * summary="[AMAN] Booking Janji Temu Cepat (Raihan)",
      * description="Endpoint untuk membuat janji temu secara cepat dengan validasi slot tersedia",
      * security={{"sanctum":{}}},
      * @OA\RequestBody(
@@ -143,8 +149,63 @@ class JanjiTemuController extends Controller
      * @OA\Property(property="data", ref="#/components/schemas/JanjiTemu")
      * )
      * ),
-     * @OA\Response(response=400, description="Slot sudah terisi atau error validasi"),
-     * @OA\Response(response=401, description="Unauthenticated")
+     * @OA\Response(
+     *   response=400,
+     *   description="Di luar jam kerja dokter atau waktu sudah terlewat",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Dokter tidak tersedia pada jam ini. Silakan pilih waktu lain"),
+     *     @OA\Property(property="timestamp", type="string", example="2025-11-20T09:15:30Z")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=401,
+     *   description="Unauthenticated",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=409,
+     *   description="Slot waktu sudah penuh atau bertabrakan dengan janji lain",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Maaf, jadwal ini bertabrakan dengan janji dokter tersebut"),
+     *     @OA\Property(property="timestamp", type="string", example="2025-11-20T09:15:30Z")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=403,
+     *   description="Forbidden: hanya pasien yang boleh membuat janji",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Hanya pasien yang dapat membuat janji temu"),
+     *     @OA\Property(property="timestamp", type="string", example="2025-11-20T09:15:30Z")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=422,
+     *   description="Validation error",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Mohon periksa kembali data yang Anda masukkan"),
+     *     @OA\Property(property="errors", type="object",
+     *       @OA\Property(property="id_dokter", type="array", @OA\Items(type="string", example="The id dokter field is required.")),
+     *       @OA\Property(property="tanggal", type="array", @OA\Items(type="string", example="The tanggal field must be a valid date.")),
+     *       @OA\Property(property="waktu_mulai", type="array", @OA\Items(type="string", example="The waktu mulai field is required."))
+     *     ),
+     *     @OA\Property(property="timestamp", type="string", example="2025-11-20T09:15:30Z")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=500,
+     *   description="Server error",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Maaf, terjadi kesalahan saat membooking janji temu"),
+     *     @OA\Property(property="timestamp", type="string", example="2025-11-20T09:15:30Z")
+     *   )
+     * )
      * )
      */
     public function buatJanjiTemu(Request $request)
@@ -194,6 +255,27 @@ class JanjiTemuController extends Controller
                     'timestamp' => now()->toISOString()
                 ], 400);
             }
+            if (str_contains($errorMessage, 'bertabrakan')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Maaf, jadwal ini bertabrakan dengan janji dokter tersebut',
+                    'timestamp' => now()->toISOString()
+                ], 409);
+            }
+            if (str_contains($errorMessage, 'shift pagi') || str_contains($errorMessage, 'shift malam') || str_contains($errorMessage, 'hanya tersedia pada shift')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokter tidak tersedia pada jam ini. Silakan pilih waktu lain',
+                    'timestamp' => now()->toISOString()
+                ], 400);
+            }
+            if (str_contains($errorMessage, 'Hanya pasien yang dapat membuat janji temu')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya pasien yang dapat membuat janji temu',
+                    'timestamp' => now()->toISOString()
+                ], 403);
+            }
             
             return response()->json([
                 'success' => false,
@@ -209,7 +291,7 @@ class JanjiTemuController extends Controller
      * path="/janji",
      * operationId="listJanjiTemu",
      * tags={"Appointment Management"},
-     * summary="[AMAN] Daftar janji temu",
+     * summary="[AMAN] Daftar janji temu (Raihan)",
      * description="Endpoint untuk mendapatkan semua janji temu (Admin/Dokter bisa lihat semua, Pasien hanya lihat miliknya)",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
@@ -226,7 +308,27 @@ class JanjiTemuController extends Controller
      * @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/JanjiTemu"))
      * )
      * ),
-     * @OA\Response(response=401, description="Unauthenticated")
+     * @OA\Response(
+     *   response=401,
+     *   description="Unauthenticated",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=404,
+     *   description="Data role tidak ditemukan",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="message", type="string", example="Data pasien tidak ditemukan")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=500,
+     *   description="Server error",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="error", type="string", example="Terjadi kesalahan server")
+     *   )
+     * )
      * )
      */
     public function listJanjiTemu(Request $request)
@@ -266,7 +368,7 @@ class JanjiTemuController extends Controller
      *   path="/janji/statistik",
      *   operationId="getStatistikJanjiTemu",
      *   tags={"Appointment Management"},
-     *   summary="[AMAN] Statistik janji temu (total & aktif)",
+     *   summary="[AMAN] Statistik janji temu (total & aktif) (Raihan)",
      *   description="Mengembalikan jumlah total janji temu dan jumlah janji temu aktif sesuai role pengguna yang sedang login.",
      *   security={{"sanctum":{}}},
      *   @OA\Response(
@@ -279,9 +381,30 @@ class JanjiTemuController extends Controller
      *        @OA\Property(property="dibatalkan", type="integer", example=13)
      *     )
      *   ),
-     *   @OA\Response(response=401, description="Unauthenticated"),
-     *   @OA\Response(response=404, description="Data role tidak ditemukan"),
-     *   @OA\Response(response=500, description="Server error")
+     *   @OA\Response(
+     *     response=401,
+     *     description="Unauthenticated",
+     *     @OA\JsonContent(
+     *       @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=404,
+     *     description="Data role tidak ditemukan",
+     *     @OA\JsonContent(
+     *       @OA\Property(property="success", type="boolean", example=false),
+     *       @OA\Property(property="message", type="string", example="Data pasien tidak ditemukan")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=500,
+     *     description="Server error",
+     *     @OA\JsonContent(
+     *       @OA\Property(property="success", type="boolean", example=false),
+     *       @OA\Property(property="message", type="string", example="Terjadi kesalahan server"),
+     *       @OA\Property(property="timestamp", type="string", example="2025-11-20T09:15:30Z")
+     *     )
+     *   )
      * )
      */
     public function getStatistikJanjiTemu(Request $request)
@@ -306,7 +429,7 @@ class JanjiTemuController extends Controller
      * path="/janji/{id}",
      * operationId="getDetailJanjiTemu",
      * tags={"Appointment Management"},
-     * summary="[AMAN] Lihat detail janji temu",
+     * summary="[AMAN] Lihat detail janji temu (Raihan)",
      * description="Endpoint untuk melihat detail janji temu berdasarkan ID.",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
@@ -323,9 +446,37 @@ class JanjiTemuController extends Controller
      * @OA\Property(property="data", ref="#/components/schemas/JanjiTemu")
      * )
      * ),
-     * @OA\Response(response=404, description="Janji temu tidak ditemukan"),
-     * @OA\Response(response=403, description="Tidak memiliki akses"),
-     * @OA\Response(response=401, description="Unauthenticated")
+     * @OA\Response(
+     *   response=404,
+     *   description="Janji temu tidak ditemukan",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Janji temu tidak ditemukan atau sudah dihapus")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=403,
+     *   description="Tidak memiliki akses",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Maaf, Anda tidak memiliki akses ke janji temu ini")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=401,
+     *   description="Unauthenticated",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=500,
+     *   description="Server error",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Maaf, terjadi kesalahan saat mengambil data janji temu")
+     *   )
+     * )
      * )
      */
     public function getDetailJanjiTemu(Request $request, $id)
@@ -381,7 +532,7 @@ class JanjiTemuController extends Controller
      * path="/janji/cari",
      * operationId="cariJanjiTemu",
      * tags={"Appointment Management"},
-     * summary="[AMAN] Cari janji temu",
+     * summary="[AMAN] Cari janji temu (Raihan)",
      * description="Endpoint untuk mencari janji temu berdasarkan tanggal dan/atau nama. Dokter & Pasien dapat memfilter dengan 'nama_dokter' dan/atau 'nama_pasien' (hasil tetap dibatasi milik sendiri); Admin dapat menggunakan keduanya tanpa batasan.",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
@@ -410,7 +561,21 @@ class JanjiTemuController extends Controller
      * description="Daftar janji temu yang sesuai filter",
      * @OA\JsonContent(ref="#/components/schemas/SearchJanjiTemuResponse")
      * ),
-     * @OA\Response(response=401, description="Unauthenticated")
+     * @OA\Response(
+     *   response=401,
+     *   description="Unauthenticated",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=500,
+     *   description="Server error",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Maaf, terjadi kesalahan saat mencari janji temu")
+     *   )
+     * )
      * )
      */
     public function cariJanjiTemu(Request $request)
@@ -427,7 +592,6 @@ class JanjiTemuController extends Controller
                 $userName = $user->nama ?? $user->nama_lengkap ?? 'Pengguna';
                 $roleLabel = $user->role === 'dokter' ? 'Dokter' : ($user->role === 'pasien' ? 'Pasien' : 'Admin');
 
-                // Jika dokter memfilter nama_dokter yang tidak cocok dengan dirinya, beri pesan yang lebih informatif
                 if ($user->role === 'dokter' && !is_null($namaDokter) && stripos($userName, $namaDokter) === false) {
                     return response()->json([
                         'success' => true,
@@ -437,7 +601,6 @@ class JanjiTemuController extends Controller
                     ], 200);
                 }
 
-                // Jika pasien memfilter nama_pasien yang tidak cocok dengan dirinya, beri pesan yang lebih informatif
                 if ($user->role === 'pasien' && !is_null($namaPasien) && stripos($userName, $namaPasien) === false) {
                     return response()->json([
                         'success' => true,
@@ -482,8 +645,10 @@ class JanjiTemuController extends Controller
      * path="/janji/{id}",
      * operationId="ubahJanjiTemu",
      * tags={"Appointment Management"},
-     * summary="[AMAN] Update janji temu",
-     * description="Endpoint untuk memperbarui janji temu. Dokter dapat: (1) menandai janji temu sebagai selesai (butuh rekam medis), atau (2) meng-assign ke dokter lain dengan mengubah field id_dokter selama tidak bentrok jadwal.",
+     * summary="[AMAN] Update janji temu (Raihan)",
+     * description="Update janji temu dengan aturan peran:
+     * \n- Pasien: edit keluhan/tanggal/waktu/dokter, bukan status; tidak boleh ubah janji yang sudah selesai/dibatalkan; wajib patuh shift dan anti-overlap.
+     * \n- Dokter: hanya bisa menandai selesai (butuh rekam medis) atau assign id_dokter ke dokter lain dengan shift sama; hanya untuk janji terjadwal; patuh shift dan anti-overlap.",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
      * name="id",
@@ -493,14 +658,39 @@ class JanjiTemuController extends Controller
      * description="ID Janji Temu"
      * ),
      * @OA\RequestBody(
-     * required=true,
-     * @OA\JsonContent(
-     * @OA\Property(property="tanggal_janji", type="string", format="date", description="Tanggal janji (opsional)", example="2025-11-20"),
-     * @OA\Property(property="waktu_mulai", type="string", description="Waktu mulai (opsional)", example="10:00"),
-     * @OA\Property(property="waktu_selesai", type="string", description="Waktu selesai (opsional)"),
-     * @OA\Property(property="status", type="string", enum={"terjadwal", "selesai", "dibatalkan"}, description="Status (opsional)", example="terjadwal"),
-     * @OA\Property(property="keluhan", type="string", description="Keluhan pasien (opsional)", example="Sakit kepala berdenyut dan mual sejak pagi")
-     * )
+     *   required=true,
+     *   @OA\MediaType(
+     *     mediaType="application/json",
+     *     @OA\Schema(
+     *       @OA\Property(property="tanggal_janji", type="string", format="date", description="Tanggal janji (opsional)", example="2025-11-20"),
+     *       @OA\Property(property="waktu_mulai", type="string", description="Waktu mulai (opsional)", example="10:00"),
+     *       @OA\Property(property="waktu_selesai", type="string", description="Waktu selesai (opsional)"),
+     *       @OA\Property(property="status", type="string", enum={"terjadwal", "selesai", "dibatalkan"}, description="Status (opsional)", example="terjadwal"),
+     *       @OA\Property(property="keluhan", type="string", description="Keluhan pasien (opsional)", example="Sakit kepala berdenyut dan mual sejak pagi")
+     *     ),
+     *     examples={
+     *       @OA\Examples(
+     *         example="Pasien_Ubah",
+     *         summary="Reschedule & edit keluhan oleh pasien",
+     *         value={"keluhan":"Nyeri perut ringan sejak kemarin","tanggal_janji":"2025-11-21","waktu_mulai":"09:00","id_dokter":2}
+     *       ),
+     *       @OA\Examples(
+     *         example="Pasien_GantiDokter",
+     *         summary="Ganti dokter oleh pasien",
+     *         value={"id_dokter":5}
+     *       ),
+     *       @OA\Examples(
+     *         example="Dokter_TandaiSelesai",
+     *         summary="Dokter menandai janji selesai",
+     *         value={"status":"selesai"}
+     *       ),
+     *       @OA\Examples(
+     *         example="Dokter_AssignShiftSama",
+     *         summary="Dokter assign ke dokter lain (shift sama)",
+     *         value={"id_dokter":7}
+     *       )
+     *     }
+     *   )
      * ),
      * @OA\Response(
      * response=200,
@@ -510,11 +700,55 @@ class JanjiTemuController extends Controller
      * @OA\Property(property="data", ref="#/components/schemas/JanjiTemu")
      * )
      * ),
-     * @OA\Response(response=400, description="Validasi gagal"),
-     * @OA\Response(response=403, description="Tidak memiliki akses"),
-     * @OA\Response(response=409, description="Tidak dapat menghapus janji yang sudah selesai"),
-     * @OA\Response(response=404, description="Janji temu tidak ditemukan"),
-     * @OA\Response(response=401, description="Unauthenticated")
+     * @OA\Response(
+     *   response=400,
+     *   description="Validasi gagal",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Maaf, data yang Anda masukkan tidak valid"),
+     *     @OA\Property(property="errors", type="object", example={"tanggal_janji":{"The tanggal janji field must be a valid date."}})
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=403,
+     *   description="Tidak memiliki akses",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Anda tidak memiliki izin untuk memperbarui janji temu ini")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=409,
+     *   description="Konflik jadwal / slot terisi",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Maaf, jadwal ini bertabrakan dengan janji dokter tersebut")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=404,
+     *   description="Janji temu tidak ditemukan",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Janji temu yang Anda cari tidak ditemukan")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=422,
+     *   description="Validation error",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Maaf, data yang Anda masukkan tidak valid"),
+     *     @OA\Property(property="errors", type="object", example={"waktu_mulai":{"The waktu mulai field is required."}})
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=401,
+     *   description="Unauthenticated",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *   )
+     * )
      * )
      */
     public function ubahJanjiTemu(Request $request, $id)
@@ -553,7 +787,6 @@ class JanjiTemuController extends Controller
         } catch (Exception $e) {
             $errorMessage = $e->getMessage();
             
-            // Handle specific error messages with user-friendly alternatives
             if (str_contains($errorMessage, 'sudah ada janji temu')) {
                 return response()->json([
                     'success' => false,
@@ -561,7 +794,6 @@ class JanjiTemuController extends Controller
                     'timestamp' => now()->toISOString()
                 ], 409);
             }
-            // Tambahan: konflik jadwal dari service (bertabrakan)
             if (str_contains($errorMessage, 'bertabrakan')) {
                 return response()->json([
                     'success' => false,
@@ -577,7 +809,6 @@ class JanjiTemuController extends Controller
                     'timestamp' => now()->toISOString()
                 ], 400);
             }
-            // Tambahan: validasi shift di service
             if (str_contains($errorMessage, 'shift pagi') || str_contains($errorMessage, 'shift malam') || str_contains($errorMessage, 'hanya tersedia pada shift')) {
                 return response()->json([
                     'success' => false,
@@ -585,7 +816,6 @@ class JanjiTemuController extends Controller
                     'timestamp' => now()->toISOString()
                 ], 400);
             }
-            // Tambahan: target dokter harus memiliki shift yang sama saat assign oleh dokter
             if (str_contains($errorMessage, 'shift yang sama')) {
                 return response()->json([
                     'success' => false,
@@ -593,7 +823,6 @@ class JanjiTemuController extends Controller
                     'timestamp' => now()->toISOString()
                 ], 400);
             }
-            // Tambahan: waktu/tanggal tidak boleh di masa lalu
             if (str_contains($errorMessage, 'sudah terlewat') || str_contains($errorMessage, 'waktu janji temu sudah terlewat')) {
                 return response()->json([
                     'success' => false,
@@ -602,7 +831,6 @@ class JanjiTemuController extends Controller
                 ], 400);
             }
 
-            // Dokter tujuan tidak ditemukan
             if (str_contains($errorMessage, 'Dokter tujuan tidak ditemukan')) {
                 return response()->json([
                     'success' => false,
@@ -611,7 +839,6 @@ class JanjiTemuController extends Controller
                 ], 404);
             }
 
-            // Tambahan: rekam medis prasyarat untuk menyelesaikan janji temu
             if (str_contains($errorMessage, 'rekam medis')) {
                 return response()->json([
                     'success' => false,
@@ -634,7 +861,7 @@ class JanjiTemuController extends Controller
      * path="/janji/{id}",
      * operationId="hapusJanjiTemu",
      * tags={"Appointment Management"},
-     * summary="[AMAN] Hapus janji temu",
+     * summary="[AMAN] Hapus janji temu (Raihan)",
      * description="Endpoint untuk membatalkan janji temu (mengubah status menjadi 'dibatalkan').",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
@@ -651,9 +878,37 @@ class JanjiTemuController extends Controller
      * @OA\Property(property="message", type="string", example="Janji temu berhasil dihapus")
      * )
      * ),
-     * @OA\Response(response=403, description="Tidak memiliki akses"),
-     * @OA\Response(response=404, description="Janji temu tidak ditemukan"),
-     * @OA\Response(response=401, description="Unauthenticated")
+     * @OA\Response(
+     *   response=403,
+     *   description="Tidak memiliki akses",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Maaf, Anda tidak memiliki izin untuk membatalkan janji temu ini")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=404,
+     *   description="Janji temu tidak ditemukan",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Janji temu tidak ditemukan atau sudah dibatalkan")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=409,
+     *   description="Tidak dapat membatalkan janji temu yang sudah selesai",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="success", type="boolean", example=false),
+     *     @OA\Property(property="message", type="string", example="Tidak dapat membatalkan janji temu yang sudah selesai")
+     *   )
+     * ),
+     * @OA\Response(
+     *   response=401,
+     *   description="Unauthenticated",
+     *   @OA\JsonContent(
+     *     @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *   )
+     * )
      * )
      */
     public function hapusJanjiTemu(Request $request, $id)
@@ -682,7 +937,6 @@ class JanjiTemuController extends Controller
             ], 404);
         } catch (Exception $e) {
             $msg = $e->getMessage();
-            // Idempoten: jika sudah dibatalkan sebelumnya, berikan pesan ramah pengguna
             if (stripos($msg, 'sudah dibatalkan') !== false) {
                 return response()->json([
                     'success' => true,

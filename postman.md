@@ -15,14 +15,14 @@ Ringkasan endpoint yang tersedia saat ini, fungsi singkat, dan role akses:
 - POST `/auth/change-password-public` — Ganti password via email (publik, dijaga env) — Role: Public
 
 ### Appointments (Janji Temu)
-- GET `/janji/ketersediaan-all` — Daftar ketersediaan dokter 7 hari ke depan — Role: Public
-- POST `/janji/booking-cepat` — Booking cepat janji temu — Role: Auth (pasien)
-- GET `/janji/search` — Pencarian janji temu — Role: Auth (pasien/dokter/admin)
+- GET `/janji/ketersediaan` — Daftar ketersediaan dokter 7 hari ke depan — Role: Public
+- POST `/janji` — Buat/booking janji temu — Role: Auth (pasien)
+- GET `/janji/cari` — Pencarian janji temu — Role: Auth (pasien/dokter/admin)
 - GET `/janji/{id}` — Detail janji temu — Role: Auth (sesuai peran)
 - PUT `/janji/{id}` — Update status/assign janji (aturan per-role) — Role: Auth (dokter/admin)
 - DELETE `/janji/{id}` — Hapus janji temu (dibatasi) — Role: Auth (admin)
 - GET `/janji` — List janji (filter per-role) — Role: Auth (pasien/dokter/admin)
-- GET `/janji/stats` — Statistik janji (total & aktif) — Role: Auth (per-role)
+- GET `/janji/statistik` — Statistik janji (total & aktif) — Role: Auth (per-role)
 
 ### Misc
 - GET `/status` — Health check — Role: Public
@@ -165,7 +165,7 @@ PUBLIC_PASSWORD_CHANGE_WHITELIST=raihanstrange@gmail.com,raihanwong@gmail.com
 ### 📅 Doctor Availability Management
 
 #### Get All Doctor Availability (Public)
-**GET** `/janji/ketersediaan-all`
+**GET** `/janji/ketersediaan`
 
 **Purpose**: Get all doctors with their availability for next 7 days
 
@@ -196,7 +196,7 @@ PUBLIC_PASSWORD_CHANGE_WHITELIST=raihanstrange@gmail.com,raihanwong@gmail.com
 ### 🔍 Appointment Search (Doctor)
 
 #### Search Appointments (Requires Auth)
-**GET** `/janji/search`
+**GET** `/janji/cari`
 
 **Headers Required**:
 ```
@@ -209,17 +209,17 @@ Authorization: Bearer [doctor_token]
 
 **Example - Search by Date**:
 ```
-GET /janji/search?tanggal=2025-11-10
+GET /janji/cari?tanggal=2025-11-10
 ```
 
 **Example - Search by Doctor Name**:
 ```
-GET /janji/search?nama_dokter=Strange
+GET /janji/cari?nama_dokter=Strange
 ```
 
 **Example - Combined Search**:
 ```
-GET /janji/search?tanggal=2025-11-10&nama_dokter=Strange
+GET /janji/cari?tanggal=2025-11-10&nama_dokter=Strange
 ```
 
 **Expected Response (200)**:
@@ -305,7 +305,7 @@ Validasi shift dan bentrok jadwal berlaku.
 ### 📋 Appointment Booking (Patient)
 
 #### Quick Appointment Booking (Requires Auth)
-**POST** `/janji/booking-cepat`
+**POST** `/janji`
 
 **Headers Required**:
 ```
@@ -364,7 +364,7 @@ Content-Type: application/json
 ### 🔍 Appointment Search (Patient)
 
 #### Search Patient's Appointments (Requires Auth)
-**GET** `/janji/search`
+**GET** `/janji/cari`
 
 **Headers Required**:
 ```
@@ -377,12 +377,12 @@ Authorization: Bearer [patient_token]
 
 **Example - Search by Date**:
 ```
-GET /janji/search?tanggal=2025-11-10
+GET /janji/cari?tanggal=2025-11-10
 ```
 
 **Example - Search by Doctor Name**:
 ```
-GET /janji/search?nama_dokter=Strange
+GET /janji/cari?nama_dokter=Strange
 ```
 
 **Expected Response (200)**:
@@ -638,7 +638,7 @@ Smart Healthcare API/
 ## Appointment Services
 
 ### Get All Doctor Availability
-**GET** `/janji/ketersediaan-all`
+**GET** `/janji/ketersediaan`
 
 Public endpoint to get all doctor availability for the next 7 days.
 
@@ -665,7 +665,7 @@ Response (200):
 ```
 
 ### Quick Appointment Booking
-**POST** `/janji/booking-cepat`
+**POST** `/janji`
 
 Requires authentication (Bearer token).
 
@@ -887,7 +887,7 @@ Response (200):
  - [ ] PUT `/janji/{id}` dengan `status=dibatalkan` sukses.
  
  ### Admin
- - [ ] GET `/janji/stats` mengembalikan agregat seluruh janji.
+ - [ ] GET `/janji/statistik` mengembalikan agregat seluruh janji.
  - [ ] GET `/janji` tanpa filter mengembalikan semua janji.
- - [ ] GET `/janji/search` bebas filter nama/tanggal.
+ - [ ] GET `/janji/cari` bebas filter nama/tanggal.
  - [ ] PUT/DELETE `/janji/{id}` bekerja sesuai aturan (hapus gagal jika `selesai`).

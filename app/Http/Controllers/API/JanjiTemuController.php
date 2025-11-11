@@ -82,8 +82,8 @@ class JanjiTemuController extends Controller
 
     /**
      * @OA\Get(
-     * path="/janji/ketersediaan-all",
-     * operationId="getAllKetersediaan",
+     * path="/janji/ketersediaan",
+     * operationId="getKetersediaan",
      * tags={"Appointment Management"},
      * summary="[PUBLIK] Cek semua ketersediaan dokter",
      * description="Endpoint publik untuk melihat ketersediaan semua dokter untuk 7 hari ke depan tanpa parameter.",
@@ -107,7 +107,7 @@ class JanjiTemuController extends Controller
      * @OA\Response(response=500, description="Server error")
      * )
      */
-    public function getAllKetersediaan(Request $request)
+    public function getKetersediaan(Request $request)
     {
         try {
             $allKetersediaan = $this->janjiTemuService->getAllKetersediaan();
@@ -119,8 +119,8 @@ class JanjiTemuController extends Controller
 
     /**
      * @OA\Post(
-     * path="/janji/booking-cepat",
-     * operationId="bookingCepat",
+     * path="/janji",
+     * operationId="buatJanjiTemu",
      * tags={"Appointment Management"},
      * summary="[AMAN] Booking Janji Temu Cepat",
      * description="Endpoint untuk membuat janji temu secara cepat dengan validasi slot tersedia",
@@ -147,7 +147,7 @@ class JanjiTemuController extends Controller
      * @OA\Response(response=401, description="Unauthenticated")
      * )
      */
-    public function bookingCepat(Request $request)
+    public function buatJanjiTemu(Request $request)
     {
         try {
             $user = $request->user();
@@ -199,9 +199,9 @@ class JanjiTemuController extends Controller
     /**
      * @OA\Get(
      * path="/janji",
-     * operationId="getAllJanjiTemu",
+     * operationId="listJanjiTemu",
      * tags={"Appointment Management"},
-     * summary="[AMAN] Dapatkan semua janji temu",
+     * summary="[AMAN] Daftar janji temu",
      * description="Endpoint untuk mendapatkan semua janji temu (Admin/Dokter bisa lihat semua, Pasien hanya lihat miliknya)",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
@@ -221,7 +221,7 @@ class JanjiTemuController extends Controller
      * @OA\Response(response=401, description="Unauthenticated")
      * )
      */
-    public function getAllJanjiTemu(Request $request)
+    public function listJanjiTemu(Request $request)
     {
         try {
             $user = $request->user();
@@ -255,8 +255,8 @@ class JanjiTemuController extends Controller
 
     /**
      * @OA\Get(
-     *   path="/janji/stats",
-     *   operationId="getJanjiStats",
+     *   path="/janji/statistik",
+     *   operationId="getStatistikJanjiTemu",
      *   tags={"Appointment Management"},
      *   summary="[AMAN] Statistik janji temu (total & aktif)",
      *   description="Mengembalikan jumlah total janji temu dan jumlah janji temu aktif sesuai role pengguna yang sedang login.",
@@ -274,7 +274,7 @@ class JanjiTemuController extends Controller
      *   @OA\Response(response=500, description="Server error")
      * )
      */
-    public function getJanjiStats(Request $request)
+    public function getStatistikJanjiTemu(Request $request)
     {
         try {
             $user = $request->user();
@@ -294,7 +294,7 @@ class JanjiTemuController extends Controller
     /**
      * @OA\Get(
      * path="/janji/{id}",
-     * operationId="getJanjiTemuById",
+     * operationId="getDetailJanjiTemu",
      * tags={"Appointment Management"},
      * summary="[AMAN] Lihat detail janji temu",
      * description="Endpoint untuk melihat detail janji temu berdasarkan ID.",
@@ -318,7 +318,7 @@ class JanjiTemuController extends Controller
      * @OA\Response(response=401, description="Unauthenticated")
      * )
      */
-    public function getJanjiTemuById(Request $request, $id)
+    public function getDetailJanjiTemu(Request $request, $id)
     {
         try {
             $user = $request->user();
@@ -359,8 +359,8 @@ class JanjiTemuController extends Controller
 
     /**
      * @OA\Get(
-     * path="/janji/search",
-     * operationId="searchJanjiTemu",
+     * path="/janji/cari",
+     * operationId="cariJanjiTemu",
      * tags={"Appointment Management"},
      * summary="[AMAN] Cari janji temu",
      * description="Endpoint untuk mencari janji temu berdasarkan tanggal dan/atau nama dokter.",
@@ -387,7 +387,7 @@ class JanjiTemuController extends Controller
      * @OA\Response(response=401, description="Unauthenticated")
      * )
      */
-    public function searchJanjiTemu(Request $request)
+    public function cariJanjiTemu(Request $request)
     {
         try {
             $tanggal = $request->query('tanggal');
@@ -424,7 +424,7 @@ class JanjiTemuController extends Controller
     /**
      * @OA\Put(
      * path="/janji/{id}",
-     * operationId="updateJanjiTemu",
+     * operationId="ubahJanjiTemu",
      * tags={"Appointment Management"},
      * summary="[AMAN] Update janji temu",
      * description="Endpoint untuk memperbarui janji temu. Dokter dapat: (1) menandai janji temu sebagai selesai (butuh rekam medis), atau (2) meng-assign ke dokter lain dengan mengubah field id_dokter selama tidak bentrok jadwal.",
@@ -460,7 +460,7 @@ class JanjiTemuController extends Controller
      * @OA\Response(response=401, description="Unauthenticated")
      * )
      */
-    public function updateJanjiTemu(Request $request, $id)
+    public function ubahJanjiTemu(Request $request, $id)
     {
         try {
             $user = $request->user();
@@ -559,7 +559,7 @@ class JanjiTemuController extends Controller
     /**
      * @OA\Delete(
      * path="/janji/{id}",
-     * operationId="deleteJanjiTemu",
+     * operationId="hapusJanjiTemu",
      * tags={"Appointment Management"},
      * summary="[AMAN] Hapus janji temu",
      * description="Endpoint untuk menghapus janji temu (soft delete).",
@@ -583,7 +583,7 @@ class JanjiTemuController extends Controller
      * @OA\Response(response=401, description="Unauthenticated")
      * )
      */
-    public function deleteJanjiTemu(Request $request, $id)
+    public function hapusJanjiTemu(Request $request, $id)
     {
         try {
             $user = $request->user();

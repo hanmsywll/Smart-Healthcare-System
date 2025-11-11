@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Models\Pasien;
+use App\Models\Dokter;
 use Exception;
 
 /**
@@ -203,6 +204,13 @@ class JanjiTemuController extends Controller
      * summary="[AMAN] Dapatkan semua janji temu",
      * description="Endpoint untuk mendapatkan semua janji temu (Admin/Dokter bisa lihat semua, Pasien hanya lihat miliknya)",
      * security={{"sanctum":{}}},
+     * @OA\Parameter(
+     *     name="sort",
+     *     in="query",
+     *     description="Urutkan berdasarkan tanggal dan waktu janji: 'terbaru'/'desc' atau 'terlama'/'asc'",
+     *     required=false,
+     *     @OA\Schema(type="string", enum={"terbaru","terlama","asc","desc"})
+     * ),
      * @OA\Response(
      * response=200,
      * description="Daftar semua janji temu",
@@ -217,15 +225,22 @@ class JanjiTemuController extends Controller
     {
         try {
             $user = $request->user();
+            $sort = $request->query('sort');
 
             if ($user->role === 'pasien') {
                 $pasien = Pasien::where('id_pengguna', $user->id_pengguna)->first();
                 if (!$pasien) {
                     return response()->json(['message' => 'Data pasien tidak ditemukan'], 404);
                 }
-                $janjiTemu = $this->janjiTemuService->getJanjiTemuByPasien($pasien->id_pasien);
+                $janjiTemu = $this->janjiTemuService->getJanjiTemuByPasien($pasien->id_pasien, null, $sort);
+            } elseif ($user->role === 'dokter') {
+                $dokter = Dokter::where('id_pengguna', $user->id_pengguna)->first();
+                if (!$dokter) {
+                    return response()->json(['message' => 'Data dokter tidak ditemukan'], 404);
+                }
+                $janjiTemu = $this->janjiTemuService->getJanjiTemuByDokter($dokter->id_dokter, null, $sort);
             } else {
-                $janjiTemu = $this->janjiTemuService->getAllJanjiTemu();
+                $janjiTemu = $this->janjiTemuService->getAllJanjiTemu($sort);
             }
 
             return response()->json([
@@ -235,6 +250,44 @@ class JanjiTemuController extends Controller
             return response()->json([
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *   path="/janji/stats",
+     *   operationId="getJanjiStats",
+     *   tags={"Appointment Management"},
+     *   summary="[AMAN] Statistik janji temu (total & aktif)",
+     *   description="Mengembalikan jumlah total janji temu dan jumlah janji temu aktif sesuai role pengguna yang sedang login.",
+     *   security={{"sanctum":{}}},
+     *   @OA\Response(
+     *     response=200,
+     *     description="Statistik janji temu",
+     *     @OA\JsonContent(
+     *        @OA\Property(property="total", type="integer", example=42),
+     *        @OA\Property(property="aktif", type="integer", example=17)
+     *     )
+     *   ),
+     *   @OA\Response(response=401, description="Unauthenticated"),
+     *   @OA\Response(response=404, description="Data role tidak ditemukan"),
+     *   @OA\Response(response=500, description="Server error")
+     * )
+     */
+    public function getJanjiStats(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $stats = $this->janjiTemuService->getJanjiStats($user);
+            return response()->json($stats, 200);
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+            $status = ($message === 'Data pasien tidak ditemukan' || $message === 'Data dokter tidak ditemukan') ? 404 : 500;
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'timestamp' => now()->toISOString()
+            ], $status);
         }
     }
 
@@ -374,7 +427,7 @@ class JanjiTemuController extends Controller
      * operationId="updateJanjiTemu",
      * tags={"Appointment Management"},
      * summary="[AMAN] Update janji temu",
-     * description="Endpoint untuk memperbarui janji temu.",
+     * description="Endpoint untuk memperbarui janji temu. Dokter dapat: (1) menandai janji temu sebagai selesai (butuh rekam medis), atau (2) meng-assign ke dokter lain dengan mengubah field id_dokter selama tidak bentrok jadwal.",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
      * name="id",
@@ -451,11 +504,45 @@ class JanjiTemuController extends Controller
                     'timestamp' => now()->toISOString()
                 ], 409);
             }
+            // Tambahan: konflik jadwal dari service (bertabrakan)
+            if (str_contains($errorMessage, 'bertabrakan')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Maaf, jadwal ini bertabrakan dengan janji dokter tersebut',
+                    'timestamp' => now()->toISOString()
+                ], 409);
+            }
             
             if (str_contains($errorMessage, 'diluar jam kerja')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Maaf, jadwal ini berada di luar jam kerja dokter',
+                    'timestamp' => now()->toISOString()
+                ], 400);
+            }
+            // Tambahan: validasi shift di service
+            if (str_contains($errorMessage, 'shift pagi') || str_contains($errorMessage, 'shift malam') || str_contains($errorMessage, 'hanya tersedia pada shift')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokter tidak tersedia pada jam ini. Silakan pilih waktu lain',
+                    'timestamp' => now()->toISOString()
+                ], 400);
+            }
+
+            // Dokter tujuan tidak ditemukan
+            if (str_contains($errorMessage, 'Dokter tujuan tidak ditemukan')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokter tujuan tidak ditemukan',
+                    'timestamp' => now()->toISOString()
+                ], 404);
+            }
+
+            // Tambahan: rekam medis prasyarat untuk menyelesaikan janji temu
+            if (str_contains($errorMessage, 'rekam medis')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokter hanya dapat menyelesaikan janji temu jika rekam medis sudah dibuat',
                     'timestamp' => now()->toISOString()
                 ], 400);
             }

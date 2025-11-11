@@ -3,6 +3,31 @@
 ## Base URL
 `http://localhost:8000/api`
 
+## 🧭 Overview Endpoint API
+
+Ringkasan endpoint yang tersedia saat ini, fungsi singkat, dan role akses:
+
+### Authentication
+- POST `/auth/register/pasien` — Registrasi pasien baru — Role: Public
+- POST `/auth/register/dokter` — Registrasi dokter baru — Role: Public
+- POST `/auth/login` — Login dan mendapatkan token — Role: Public
+- POST `/auth/logout` — Logout, revoke token saat ini — Role: Auth (semua)
+- POST `/auth/change-password-public` — Ganti password via email (publik, dijaga env) — Role: Public
+
+### Appointments (Janji Temu)
+- GET `/janji/ketersediaan-all` — Daftar ketersediaan dokter 7 hari ke depan — Role: Public
+- POST `/janji/booking-cepat` — Booking cepat janji temu — Role: Auth (pasien)
+- GET `/janji/search` — Pencarian janji temu — Role: Auth (pasien/dokter/admin)
+- GET `/janji/{id}` — Detail janji temu — Role: Auth (sesuai peran)
+- PUT `/janji/{id}` — Update status/assign janji (aturan per-role) — Role: Auth (dokter/admin)
+- DELETE `/janji/{id}` — Hapus janji temu (dibatasi) — Role: Auth (admin)
+- GET `/janji` — List janji (filter per-role) — Role: Auth (pasien/dokter/admin)
+- GET `/janji/stats` — Statistik janji (total & aktif) — Role: Auth (per-role)
+
+### Misc
+- GET `/status` — Health check — Role: Public
+- GET `/user` — Profil user saat ini — Role: Auth (semua)
+
 ## 🚀 Quick Start Testing Guide
 
 ### 1. Health Check (No Auth Required)
@@ -50,6 +75,87 @@
     "email": "raihanstark@gmail.com",
     "password": "qwerty123"
 }
+```
+
+---
+
+### 3. Registration
+
+#### A. Registrasi Pasien
+**POST** `/auth/register/pasien`
+
+**Body**:
+```json
+{
+  "email": "pasien@example.com",
+  "password": "qwerty123",
+  "nama_lengkap": "Nama Pasien",
+  "no_telepon": "081234567890",
+  "tanggal_lahir": "2000-01-01",
+  "golongan_darah": "O",
+  "alamat": "Jl. Contoh No. 1"
+}
+```
+
+**Response (201)**: token akses dan data pasien.
+
+#### B. Registrasi Dokter
+**POST** `/auth/register/dokter`
+
+**Body**:
+```json
+{
+  "email": "dokter@example.com",
+  "password": "qwerty123",
+  "nama_lengkap": "Nama Dokter",
+  "no_telepon": "081234567891",
+  "spesialisasi": "Umum",
+  "no_lisensi": "LIS-001",
+  "biaya_konsultasi": 150000,
+  "shift": "pagi"
+}
+```
+
+**Response (201)**: token akses dan data dokter.
+
+---
+
+### 🔐 Change Password (Public Only)
+
+Untuk saat ini, hanya endpoint publik yang tersedia untuk mengganti password. Endpoint lain terkait password telah dihapus.
+
+**POST** `/auth/change-password-public`
+
+**Body**:
+```json
+{
+  "email": "user@example.com",
+  "new_password": "passwordBaru123",
+  "new_password_confirmation": "passwordBaru123"
+}
+```
+
+**Response (200)**:
+```json
+{
+  "message": "Password berhasil diubah"
+}
+```
+
+**Guarding & Konfigurasi**:
+- `ALLOW_PUBLIC_PASSWORD_CHANGE`: default `false`. Jika `false`, endpoint akan `403` kecuali email ada dalam whitelist.
+- `PUBLIC_PASSWORD_CHANGE_WHITELIST`: daftar email yang diizinkan (comma-separated), misalnya: `raihanstrange@gmail.com,raihanwong@gmail.com`.
+
+**Errors**:
+- 403: `{ "message": "Fitur ini dinonaktifkan oleh konfigurasi environment" }`
+- 404: `{ "message": "User not found" }`
+- 422: Validasi password atau email tidak valid
+
+**Konfigurasi .env**:
+```
+ALLOW_PUBLIC_PASSWORD_CHANGE=false
+# Izinkan email tertentu meski fitur global off
+PUBLIC_PASSWORD_CHANGE_WHITELIST=raihanstrange@gmail.com,raihanwong@gmail.com
 ```
 
 ---
@@ -179,6 +285,18 @@ Content-Type: application/json
     "error": "Dokter hanya dapat menyelesaikan janji temu"
 }
 ```
+
+### 🔄 Assign Janji ke Dokter Lain (Doctor Only)
+**PUT** `/janji/{id}`
+
+**Body (assign)**:
+```json
+{
+  "id_dokter": 2
+}
+```
+
+Validasi shift dan bentrok jadwal berlaku.
 
 ---
 
@@ -330,6 +448,9 @@ Content-Type: application/json
     "error": "Pasien hanya dapat membatalkan janji temu"
 }
 ```
+
+### 🔍 Appointment Search (Patient)
+Lihat juga bagian pencarian untuk dokter; endpoint sama, hasil dibatasi milik pasien.
 
 ---
 
@@ -619,3 +740,154 @@ Response (200):
     "updated_at": "2024-01-01T00:00:00.000000Z"
 }
 ```
+ 
+ ---
+ 
+ ## 📊 Statistik Janji Temu (Per Role)
+ 
+ ### Get Stats (Requires Auth)
+ **GET** `/janji/stats`
+ 
+ **Headers Required**:
+ ```
+ Authorization: Bearer [token]
+ ```
+ 
+ **Respons (200)**:
+ ```json
+ {
+   "total": 42,
+   "aktif": 17
+ }
+ ```
+ 
+ **Catatan Definisi "aktif"**:
+ - Status bukan `selesai` dan bukan `dibatalkan` (alias `terjadwal`).
+ 
+ **Perilaku per Role**:
+ - Pasien: dihitung hanya janji temu miliknya.
+ - Dokter: dihitung janji temu yang dijadwalkan ke dirinya.
+ - Admin/role lain: dihitung seluruh janji temu.
+ 
+ **Error (404)** jika data pasien/dokter tidak ditemukan:
+ ```json
+ {
+   "success": false,
+   "message": "Data pasien tidak ditemukan"
+ }
+ ```
+ 
+ ---
+ 
+ ## 📃 Daftar Janji + Sorting (Per Role)
+ 
+ ### List Janji Temu (Requires Auth)
+ **GET** `/janji`
+ 
+ **Query (opsional)**:
+ - `sort`: `terbaru`/`desc` atau `terlama`/`asc`
+ 
+ **Contoh**:
+ - `GET /janji?sort=terbaru`
+ - `GET /janji?sort=asc`
+ 
+ **Perilaku per Role**:
+ - Pasien: hanya melihat janji temu miliknya.
+ - Dokter: hanya melihat janji temu yang dijadwalkan ke dirinya.
+ - Admin: melihat semua janji temu.
+ 
+ ---
+ 
+ ## 🔄 Assign Janji ke Dokter Lain (Doctor Only)
+ 
+ ### Assign ke Dokter Lain (Requires Auth)
+ **PUT** `/janji/{id}`
+ 
+ **Headers**:
+ ```
+ Authorization: Bearer [doctor_token]
+ Content-Type: application/json
+ ```
+ 
+ **Body (assign)**:
+ ```json
+ {
+   "id_dokter": 2
+ }
+ ```
+ 
+ **Validasi**:
+ - Shift dokter tujuan harus sesuai dengan `waktu_mulai` janji.
+ - Tidak boleh bentrok jadwal dengan janji dokter tujuan pada tanggal yang sama.
+ 
+ **Sukses (200)**:
+ ```json
+ {
+   "success": true,
+   "message": "Jadwal janji temu berhasil diperbarui",
+   "data": {
+     "id_janji_temu": 10,
+     "id_dokter": 2
+   }
+ }
+ ```
+ 
+ **Error (422/400)** contoh:
+ ```json
+ {
+   "success": false,
+   "message": "Dokter ini hanya tersedia pada shift pagi (07:00 - 18:00)"
+ }
+ ```
+ atau
+ ```json
+ {
+   "success": false,
+   "message": "Slot waktu ini bertabrakan dengan janji temu yang sudah ada"
+ }
+ ```
+ 
+ ### Tandai Selesai (Doctor Only)
+ **PUT** `/janji/{id}`
+ 
+ **Body (selesai)**:
+ ```json
+ {
+   "status": "selesai"
+ }
+ ```
+ 
+ **Catatan**: membutuhkan rekam medis untuk janji tersebut dan harus konsisten dengan `id_dokter` dan `id_pasien` pada janji.
+ 
+ ---
+ 
+## 🛠️ Admin Role Features
+ 
+ Admin dapat mengakses seluruh data tanpa pembatasan pasien/dokter:
+ - **GET** `/janji` → semua janji temu (dukung `sort`).
+ - **GET** `/janji/stats` → statistik semua janji (`total`, `aktif`).
+ - **GET** `/janji/{id}` → detail janji.
+ - **GET** `/janji/search` → pencarian bebas (tidak dibatasi pasien).
+ - **PUT** `/janji/{id}` → dapat memperbarui field bebas (tidak terkena pembatasan khusus pasien/dokter).
+ - **DELETE** `/janji/{id}` → dapat menghapus kecuali status `selesai`.
+ 
+ ---
+ 
+ ## ✅ Tambahan Checklist Testing
+ 
+ ### Doctor
+ - [ ] GET `/janji/stats` menampilkan total & aktif dokter.
+ - [ ] GET `/janji?sort=terbaru` hanya janji milik dokter.
+ - [ ] PUT `/janji/{id}` dengan `id_dokter` berhasil assign bila tidak bentrok.
+ - [ ] PUT `/janji/{id}` dengan `status=selesai` gagal jika rekam medis belum ada.
+ 
+ ### Patient
+ - [ ] GET `/janji/stats` menampilkan total & aktif pasien.
+ - [ ] GET `/janji?sort=terlama` hanya janji milik pasien.
+ - [ ] PUT `/janji/{id}` dengan `status=dibatalkan` sukses.
+ 
+ ### Admin
+ - [ ] GET `/janji/stats` mengembalikan agregat seluruh janji.
+ - [ ] GET `/janji` tanpa filter mengembalikan semua janji.
+ - [ ] GET `/janji/search` bebas filter nama/tanggal.
+ - [ ] PUT/DELETE `/janji/{id}` bekerja sesuai aturan (hapus gagal jika `selesai`).

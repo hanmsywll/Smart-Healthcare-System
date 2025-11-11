@@ -24,6 +24,24 @@ class JanjiTemuRepository
         return $query->orderBy('tanggal_janji', 'asc')->orderBy('waktu_mulai', 'asc')->get();
     }
 
+    /**
+     * Mengambil janji temu dokter dengan sorting
+     */
+    public function getByDokterSorted($idDokter, $status = null, $order = 'desc')
+    {
+        $query = JanjiTemu::where('id_dokter', $idDokter)
+            ->with(['pasien.pengguna', 'dokter.pengguna']);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $order = strtolower($order) === 'asc' ? 'asc' : 'desc';
+        return $query->orderBy('tanggal_janji', $order)
+                     ->orderBy('waktu_mulai', $order)
+                     ->get();
+    }
+
     public function getByPasien($idPasien, $status = null)
     {
         $query = JanjiTemu::where('id_pasien', $idPasien)
@@ -69,7 +87,7 @@ class JanjiTemuRepository
     /**
      * Mengambil HANYA jam mulai yang sudah terisi untuk endpoint publik
      */
-    public function getWaktuTerisi($idDokter, $tanggal)
+    public function     getWaktuTerisi($idDokter, $tanggal)
     {
         return JanjiTemu::where('id_dokter', $idDokter)
             ->where('tanggal_janji', $tanggal)
@@ -111,19 +129,16 @@ class JanjiTemuRepository
     {
         $query = JanjiTemu::with(['pasien.pengguna', 'dokter.pengguna']);
 
-        // Filter berdasarkan tanggal
         if ($tanggal) {
             $query->whereDate('tanggal_janji', $tanggal);
         }
 
-        // Filter berdasarkan nama dokter
         if ($namaDokter) {
             $query->whereHas('dokter.pengguna', function($q) use ($namaDokter) {
                 $q->where('nama_lengkap', 'like', '%' . $namaDokter . '%');
             });
         }
 
-        // Filter berdasarkan pasien (untuk riwayat pribadi)
         if ($idPasien) {
             $query->where('id_pasien', $idPasien);
         }
@@ -151,5 +166,88 @@ class JanjiTemuRepository
         $janjiTemu = JanjiTemu::findOrFail($id);
         $janjiTemu->delete();
         return $janjiTemu;
+    }
+
+    /**
+     * Mengambil semua janji temu dengan relasi dan sorting
+     */
+    public function getAllWithRelationsSorted($order = 'desc')
+    {
+        $order = strtolower($order) === 'asc' ? 'asc' : 'desc';
+        return JanjiTemu::with(['pasien.pengguna', 'dokter.pengguna'])
+            ->orderBy('tanggal_janji', $order)
+            ->orderBy('waktu_mulai', $order)
+            ->get();
+    }
+
+    /**
+     * Mengambil janji temu pasien dengan sorting
+     */
+    public function getByPasienSorted($idPasien, $status = null, $order = 'desc')
+    {
+        $query = JanjiTemu::where('id_pasien', $idPasien)
+            ->with(['dokter.pengguna', 'pasien.pengguna']);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $order = strtolower($order) === 'asc' ? 'asc' : 'desc';
+        return $query->orderBy('tanggal_janji', $order)
+                     ->orderBy('waktu_mulai', $order)
+                     ->get();
+    }
+
+    /**
+     * Hitung total janji temu (semua) untuk admin
+     */
+    public function countAll(): int
+    {
+        return JanjiTemu::count();
+    }
+
+    /**
+     * Hitung janji temu aktif untuk admin
+     * Definisi aktif: status bukan 'selesai' dan bukan 'dibatalkan'
+     */
+    public function countActive(): int
+    {
+        return JanjiTemu::whereNotIn('status', ['selesai', 'dibatalkan'])->count();
+    }
+
+    /**
+     * Hitung total janji temu untuk pasien tertentu
+     */
+    public function countByPasien(int $idPasien): int
+    {
+        return JanjiTemu::where('id_pasien', $idPasien)->count();
+    }
+
+    /**
+     * Hitung janji temu aktif untuk pasien tertentu
+     */
+    public function countActiveByPasien(int $idPasien): int
+    {
+        return JanjiTemu::where('id_pasien', $idPasien)
+            ->whereNotIn('status', ['selesai', 'dibatalkan'])
+            ->count();
+    }
+
+    /**
+     * Hitung total janji temu untuk dokter tertentu
+     */
+    public function countByDokter(int $idDokter): int
+    {
+        return JanjiTemu::where('id_dokter', $idDokter)->count();
+    }
+
+    /**
+     * Hitung janji temu aktif untuk dokter tertentu
+     */
+    public function countActiveByDokter(int $idDokter): int
+    {
+        return JanjiTemu::where('id_dokter', $idDokter)
+            ->whereNotIn('status', ['selesai', 'dibatalkan'])
+            ->count();
     }
 }

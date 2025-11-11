@@ -291,7 +291,7 @@ class JanjiTemuService
 
     /**
      * Statistik janji temu: total dan aktif sesuai role pengguna
-     * Definisi aktif: status bukan 'selesai' dan bukan 'dibatalkan'
+     * Definisi aktif: status 'terjadwal'
      */
     public function getJanjiStats(Pengguna $user): array
     {
@@ -303,6 +303,8 @@ class JanjiTemuService
             return [
                 'total' => $this->janjiTemuRepository->countByPasien($pasien->id_pasien),
                 'aktif' => $this->janjiTemuRepository->countActiveByPasien($pasien->id_pasien),
+                'selesai' => $this->janjiTemuRepository->countByPasienStatus($pasien->id_pasien, 'selesai'),
+                'dibatalkan' => $this->janjiTemuRepository->countByPasienStatus($pasien->id_pasien, 'dibatalkan'),
             ];
         }
 
@@ -314,12 +316,16 @@ class JanjiTemuService
             return [
                 'total' => $this->janjiTemuRepository->countByDokter($dokter->id_dokter),
                 'aktif' => $this->janjiTemuRepository->countActiveByDokter($dokter->id_dokter),
+                'selesai' => $this->janjiTemuRepository->countByDokterStatus($dokter->id_dokter, 'selesai'),
+                'dibatalkan' => $this->janjiTemuRepository->countByDokterStatus($dokter->id_dokter, 'dibatalkan'),
             ];
         }
 
         return [
             'total' => $this->janjiTemuRepository->countAll(),
             'aktif' => $this->janjiTemuRepository->countActive(),
+            'selesai' => $this->janjiTemuRepository->countByStatus('selesai'),
+            'dibatalkan' => $this->janjiTemuRepository->countByStatus('dibatalkan'),
         ];
     }
 

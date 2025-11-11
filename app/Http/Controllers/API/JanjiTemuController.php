@@ -274,7 +274,9 @@ class JanjiTemuController extends Controller
      *     description="Statistik janji temu",
      *     @OA\JsonContent(
      *        @OA\Property(property="total", type="integer", example=42),
-     *        @OA\Property(property="aktif", type="integer", example=17)
+     *        @OA\Property(property="aktif", type="integer", example=17),
+     *        @OA\Property(property="selesai", type="integer", example=12),
+     *        @OA\Property(property="dibatalkan", type="integer", example=13)
      *     )
      *   ),
      *   @OA\Response(response=401, description="Unauthenticated"),

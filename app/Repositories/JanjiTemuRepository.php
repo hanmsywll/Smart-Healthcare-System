@@ -218,11 +218,11 @@ class JanjiTemuRepository
 
     /**
      * Hitung janji temu aktif untuk admin
-     * Definisi aktif: status bukan 'selesai' dan bukan 'dibatalkan'
+     * Definisi aktif: status 'terjadwal'
      */
     public function countActive(): int
     {
-        return JanjiTemu::whereNotIn('status', ['selesai', 'dibatalkan'])->count();
+        return JanjiTemu::where('status', 'terjadwal')->count();
     }
 
     /**
@@ -239,7 +239,7 @@ class JanjiTemuRepository
     public function countActiveByPasien(int $idPasien): int
     {
         return JanjiTemu::where('id_pasien', $idPasien)
-            ->whereNotIn('status', ['selesai', 'dibatalkan'])
+            ->where('status', 'terjadwal')
             ->count();
     }
 
@@ -257,7 +257,35 @@ class JanjiTemuRepository
     public function countActiveByDokter(int $idDokter): int
     {
         return JanjiTemu::where('id_dokter', $idDokter)
-            ->whereNotIn('status', ['selesai', 'dibatalkan'])
+            ->where('status', 'terjadwal')
+            ->count();
+    }
+
+    /**
+     * Hitung total berdasarkan status (admin)
+     */
+    public function countByStatus(string $status): int
+    {
+        return JanjiTemu::where('status', $status)->count();
+    }
+
+    /**
+     * Hitung total berdasarkan status untuk pasien
+     */
+    public function countByPasienStatus(int $idPasien, string $status): int
+    {
+        return JanjiTemu::where('id_pasien', $idPasien)
+            ->where('status', $status)
+            ->count();
+    }
+
+    /**
+     * Hitung total berdasarkan status untuk dokter
+     */
+    public function countByDokterStatus(int $idDokter, string $status): int
+    {
+        return JanjiTemu::where('id_dokter', $idDokter)
+            ->where('status', $status)
             ->count();
     }
 }

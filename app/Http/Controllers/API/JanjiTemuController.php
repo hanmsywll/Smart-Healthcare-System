@@ -186,6 +186,14 @@ class JanjiTemuController extends Controller
                     'timestamp' => now()->toISOString()
                 ], 400);
             }
+
+            if (str_contains($errorMessage, 'terlewat')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Waktu janji temu sudah terlewat, silakan pilih waktu lain',
+                    'timestamp' => now()->toISOString()
+                ], 400);
+            }
             
             return response()->json([
                 'success' => false,
@@ -333,6 +341,15 @@ class JanjiTemuController extends Controller
                         'timestamp' => now()->toISOString()
                     ], 403);
                 }
+            } elseif ($user->role === 'dokter') {
+                $dokter = Dokter::where('id_pengguna', $user->id_pengguna)->first();
+                if (!$dokter || $janjiTemu->id_dokter !== $dokter->id_dokter) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Maaf, Anda tidak memiliki akses ke janji temu ini',
+                        'timestamp' => now()->toISOString()
+                    ], 403);
+                }
             }
 
             return response()->json([
@@ -363,7 +380,7 @@ class JanjiTemuController extends Controller
      * operationId="cariJanjiTemu",
      * tags={"Appointment Management"},
      * summary="[AMAN] Cari janji temu",
-     * description="Endpoint untuk mencari janji temu berdasarkan tanggal dan/atau nama dokter.",
+     * description="Endpoint untuk mencari janji temu berdasarkan tanggal dan/atau nama. Dokter & Pasien dapat memfilter dengan 'nama_dokter' dan/atau 'nama_pasien' (hasil tetap dibatasi milik sendiri); Admin dapat menggunakan keduanya tanpa batasan.",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
      * name="tanggal",
@@ -379,6 +396,13 @@ class JanjiTemuController extends Controller
      * required=false,
      * @OA\Schema(type="string", example="Raihan")
      * ),
+     * @OA\Parameter(
+     * name="nama_pasien",
+     * in="query",
+     * description="Filter berdasarkan nama pasien (partial match) — khusus Pasien/Admin",
+     * required=false,
+     * @OA\Schema(type="string", example="Budi")
+     * ),
      * @OA\Response(
      * response=200,
      * description="Daftar janji temu yang sesuai filter",
@@ -392,11 +416,35 @@ class JanjiTemuController extends Controller
         try {
             $tanggal = $request->query('tanggal');
             $namaDokter = $request->query('nama_dokter');
+            $namaPasien = $request->query('nama_pasien');
             
             $user = $request->user();
-            $results = $this->janjiTemuService->searchJanjiTemu($tanggal, $namaDokter, $user);
+            $results = $this->janjiTemuService->searchJanjiTemu($tanggal, $namaDokter, $namaPasien, $user);
             
-            if (empty($results)) {
+            if (count($results) === 0) {
+                $userName = $user->nama ?? $user->nama_lengkap ?? 'Pengguna';
+                $roleLabel = $user->role === 'dokter' ? 'Dokter' : ($user->role === 'pasien' ? 'Pasien' : 'Admin');
+
+                // Jika dokter memfilter nama_dokter yang tidak cocok dengan dirinya, beri pesan yang lebih informatif
+                if ($user->role === 'dokter' && !is_null($namaDokter) && stripos($userName, $namaDokter) === false) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => "Kamu sedang login sebagai $roleLabel $userName, tidak bisa mencari $roleLabel lain dan hanya bisa lihat milik sendiri",
+                        'data' => [],
+                        'timestamp' => now()->toISOString()
+                    ], 200);
+                }
+
+                // Jika pasien memfilter nama_pasien yang tidak cocok dengan dirinya, beri pesan yang lebih informatif
+                if ($user->role === 'pasien' && !is_null($namaPasien) && stripos($userName, $namaPasien) === false) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => "Kamu sedang login sebagai $roleLabel $userName, tidak bisa mencari $roleLabel lain dan hanya bisa lihat milik sendiri",
+                        'data' => [],
+                        'timestamp' => now()->toISOString()
+                    ], 200);
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Tidak ada janji temu yang sesuai dengan pencarian Anda',
@@ -411,6 +459,12 @@ class JanjiTemuController extends Controller
                 'data' => $results,
                 'timestamp' => now()->toISOString()
             ], 200);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'timestamp' => now()->toISOString()
+            ], 403);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -456,6 +510,7 @@ class JanjiTemuController extends Controller
      * ),
      * @OA\Response(response=400, description="Validasi gagal"),
      * @OA\Response(response=403, description="Tidak memiliki akses"),
+     * @OA\Response(response=409, description="Tidak dapat menghapus janji yang sudah selesai"),
      * @OA\Response(response=404, description="Janji temu tidak ditemukan"),
      * @OA\Response(response=401, description="Unauthenticated")
      * )
@@ -528,6 +583,22 @@ class JanjiTemuController extends Controller
                     'timestamp' => now()->toISOString()
                 ], 400);
             }
+            // Tambahan: target dokter harus memiliki shift yang sama saat assign oleh dokter
+            if (str_contains($errorMessage, 'shift yang sama')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokter tujuan harus memiliki shift yang sama',
+                    'timestamp' => now()->toISOString()
+                ], 400);
+            }
+            // Tambahan: waktu/tanggal tidak boleh di masa lalu
+            if (str_contains($errorMessage, 'sudah terlewat') || str_contains($errorMessage, 'waktu janji temu sudah terlewat')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Maaf, waktu janji temu sudah terlewat. Silakan pilih waktu lain',
+                    'timestamp' => now()->toISOString()
+                ], 400);
+            }
 
             // Dokter tujuan tidak ditemukan
             if (str_contains($errorMessage, 'Dokter tujuan tidak ditemukan')) {
@@ -562,7 +633,7 @@ class JanjiTemuController extends Controller
      * operationId="hapusJanjiTemu",
      * tags={"Appointment Management"},
      * summary="[AMAN] Hapus janji temu",
-     * description="Endpoint untuk menghapus janji temu (soft delete).",
+     * description="Endpoint untuk membatalkan janji temu (mengubah status menjadi 'dibatalkan').",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
      * name="id",
@@ -608,6 +679,23 @@ class JanjiTemuController extends Controller
                 'timestamp' => now()->toISOString()
             ], 404);
         } catch (Exception $e) {
+            $msg = $e->getMessage();
+            // Idempoten: jika sudah dibatalkan sebelumnya, berikan pesan ramah pengguna
+            if (stripos($msg, 'sudah dibatalkan') !== false) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Anda sudah membatalkan',
+                    'timestamp' => now()->toISOString()
+                ], 200);
+            }
+            if (stripos($msg, 'selesai') !== false && stripos($msg, 'tidak dapat dihapus') !== false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat membatalkan janji temu yang sudah selesai',
+                    'timestamp' => now()->toISOString()
+                ], 409);
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Maaf, terjadi kesalahan saat membatalkan janji temu',

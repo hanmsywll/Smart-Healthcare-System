@@ -142,6 +142,19 @@ class JanjiTemuService
             }
         }
 
+        // Tidak boleh booking waktu yang sudah lewat pada hari yang sama
+        try {
+            $tanggalJanji = Carbon::parse($data['tanggal']);
+            if ($tanggalJanji->isToday()) {
+                $startDateTime = Carbon::parse($data['tanggal'].' '.$data['waktu_mulai']);
+                if ($startDateTime->lessThan(Carbon::now())) {
+                    throw new \Exception('Waktu janji temu sudah terlewat');
+                }
+            }
+        } catch (\Throwable $e) {
+            // Jika parsing gagal, biarkan validator menangani format
+        }
+
         $waktuMulaiBaru = $data['waktu_mulai'];
         $waktuSelesaiBaru = Carbon::parse($waktuMulaiBaru)->addHour()->format('H:i:s');
 
@@ -242,21 +255,34 @@ class JanjiTemuService
     }
 
     /**
-     * Search janji temu berdasarkan tanggal dan nama dokter
+     * Search janji temu berdasarkan tanggal dan nama.
+     * Dokter dapat memfilter dengan nama_dokter; Pasien dengan nama_pasien; Admin keduanya.
      */
-    public function searchJanjiTemu($tanggal = null, $namaDokter = null, $user = null)
+    public function searchJanjiTemu($tanggal = null, $namaDokter = null, $namaPasien = null, $user = null)
     {
         $idPasien = null;
-        
-        if ($user && $user->role === 'pasien') {
-            $pasien = Pasien::where('id_pengguna', $user->id_pengguna)->first();
-            if (!$pasien) {
-                throw new \Exception('Data pasien tidak ditemukan');
+        $idDokter = null;
+
+        if ($user) {
+            if ($user->role === 'pasien') {
+                $pasien = Pasien::where('id_pengguna', $user->id_pengguna)->first();
+                if (!$pasien) {
+                    throw new \Exception('Data pasien tidak ditemukan');
+                }
+                $idPasien = $pasien->id_pasien;
+                // Pasien: boleh memfilter nama_dokter maupun nama_pasien; hasil tetap dalam scope id_pasien
+            } elseif ($user->role === 'dokter') {
+                $dokter = Dokter::where('id_pengguna', $user->id_pengguna)->first();
+                if (!$dokter) {
+                    throw new \Exception('Data dokter tidak ditemukan');
+                }
+                $idDokter = $dokter->id_dokter;
+                // Dokter: boleh memfilter nama_pasien maupun nama_dokter; hasil tetap dalam scope id_dokter
             }
-            $idPasien = $pasien->id_pasien;
+            // Admin: tidak ada pembatasan khusus
         }
-        
-        $items = $this->janjiTemuRepository->searchWithFilters($tanggal, $namaDokter, $idPasien);
+
+        $items = $this->janjiTemuRepository->searchWithFilters($tanggal, $namaDokter, $idPasien, $idDokter, $namaPasien);
         foreach ($items as $item) {
             $this->autoCancelIfPast($item);
         }
@@ -323,9 +349,36 @@ class JanjiTemuService
             if (!$pasien || $janjiTemu->id_pasien !== $pasien->id_pasien) {
                 throw new AuthorizationException('Anda tidak memiliki akses ke janji temu ini');
             }
-            // Pasien hanya boleh update ke 'dibatalkan'
-            if (isset($data['status']) && $data['status'] !== 'dibatalkan') {
-                throw new AuthorizationException('Pasien hanya dapat membatalkan janji temu');
+            // Pasien tidak bisa edit jika janji sudah dibatalkan/selesai
+            if (in_array($janjiTemu->status, ['dibatalkan', 'selesai'])) {
+                throw new AuthorizationException('Janji temu ini tidak dapat diubah karena sudah dibatalkan atau selesai');
+            }
+            // Batasi field yang boleh diubah oleh pasien
+            $allowedKeys = ['keluhan', 'tanggal_janji', 'waktu_mulai', 'id_dokter'];
+            $unknownKeys = array_diff(array_keys($data), $allowedKeys);
+            if (!empty($unknownKeys)) {
+                throw new AuthorizationException('Pasien hanya dapat mengubah keluhan, tanggal, waktu, atau dokter');
+            }
+            // Pasien tidak boleh mengubah status
+            if (isset($data['status'])) {
+                throw new AuthorizationException('Pasien tidak dapat mengubah status janji temu');
+            }
+            // Tidak boleh memundurkan ke waktu/tanggal yang sudah lewat
+            if (isset($data['tanggal_janji']) || isset($data['waktu_mulai'])) {
+                $tanggalTarget = $data['tanggal_janji'] ?? $janjiTemu->tanggal_janji;
+                $waktuTarget = $data['waktu_mulai'] ?? $janjiTemu->waktu_mulai;
+                try {
+                    $tanggal = Carbon::parse($tanggalTarget);
+                    $targetDateTime = Carbon::parse($tanggalTarget.' '.$waktuTarget);
+                    if ($tanggal->isBefore(Carbon::today())) {
+                        throw new \Exception('Waktu janji temu sudah terlewat');
+                    }
+                    if ($tanggal->isToday() && $targetDateTime->lessThan(Carbon::now())) {
+                        throw new \Exception('Waktu janji temu sudah terlewat');
+                    }
+                } catch (\Throwable $e) {
+                    // Biarkan validator menangani format tanggal/waktu jika parsing gagal
+                }
             }
         }
 
@@ -345,6 +398,13 @@ class JanjiTemuService
             if (isset($data['status']) && $data['status'] !== 'selesai') {
                 throw new AuthorizationException('Dokter hanya dapat menandai janji temu sebagai selesai');
             }
+            // Dokter hanya dapat menyelesaikan/assign bila janji masih terjadwal
+            if (($data['status'] ?? null) && $janjiTemu->status !== 'terjadwal') {
+                throw new AuthorizationException('Hanya dapat mengubah janji yang masih terjadwal');
+            }
+            if (isset($data['id_dokter']) && $janjiTemu->status !== 'terjadwal') {
+                throw new AuthorizationException('Hanya dapat mengubah janji yang masih terjadwal');
+            }
             // Jika dokter menandai selesai, pastikan rekam medis untuk janji temu ini sudah ada
             if (isset($data['status']) && $data['status'] === 'selesai') {
                 $rekamMedis = RekamMedis::where('id_janji_temu', $id)->first();
@@ -359,6 +419,13 @@ class JanjiTemuService
             // Jika dokter melakukan assign ke dokter lain (ubah id_dokter), validasi akan diproses di bawah:
             // - Validasi shift dokter tujuan terhadap waktu_mulai saat ini
             // - Validasi bentrok jadwal (overlap) dengan janji dokter tujuan
+            if (isset($data['id_dokter'])) {
+                $dokterBaru = Dokter::find($data['id_dokter']);
+                $dokterLama = Dokter::find($janjiTemu->id_dokter);
+                if ($dokterBaru && $dokterLama && ($dokterBaru->shift !== $dokterLama->shift)) {
+                    throw new \Exception('Dokter tujuan harus memiliki shift yang sama');
+                }
+            }
         }
 
         // Otomatis hitung waktu_selesai jika waktu_mulai diupdate
@@ -422,11 +489,24 @@ class JanjiTemuService
             }
         }
 
+        // Dokter tidak diperbolehkan menghapus via endpoint ini
+        if ($user->role === 'dokter') {
+            throw new AuthorizationException('Hanya pasien atau admin yang dapat membatalkan janji temu');
+        }
+
         if ($janjiTemu->status === 'selesai') {
             throw new \Exception('Janji temu yang sudah selesai tidak dapat dihapus');
         }
 
-        return $this->janjiTemuRepository->delete($id);
+        // Jika sudah dibatalkan sebelumnya, kembalikan sinyal agar controller merespons idempoten
+        if ($janjiTemu->status === 'dibatalkan') {
+            throw new \Exception('Janji temu sudah dibatalkan');
+        }
+
+        // Alihkan delete menjadi pembatalan status agar dokter/pasien melihat status dibatalkan
+        return $this->janjiTemuRepository->update($id, [
+            'status' => 'dibatalkan',
+        ]);
     }
 
     /**

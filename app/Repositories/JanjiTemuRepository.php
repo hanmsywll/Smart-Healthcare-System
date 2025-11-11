@@ -123,9 +123,9 @@ class JanjiTemuRepository
     }
 
     /**
-     * Search janji temu berdasarkan tanggal dan nama dokter
+     * Search janji temu berdasarkan tanggal dan nama.
      */
-    public function searchWithFilters($tanggal = null, $namaDokter = null, $idPasien = null)
+    public function searchWithFilters($tanggal = null, $namaDokter = null, $idPasien = null, $idDokter = null, $namaPasien = null)
     {
         $query = JanjiTemu::with(['pasien.pengguna', 'dokter.pengguna']);
 
@@ -139,8 +139,18 @@ class JanjiTemuRepository
             });
         }
 
+        if ($namaPasien) {
+            $query->whereHas('pasien.pengguna', function($q) use ($namaPasien) {
+                $q->where('nama_lengkap', 'like', '%' . $namaPasien . '%');
+            });
+        }
+
         if ($idPasien) {
             $query->where('id_pasien', $idPasien);
+        }
+
+        if ($idDokter) {
+            $query->where('id_dokter', $idDokter);
         }
 
         return $query->orderBy('tanggal_janji', 'desc')

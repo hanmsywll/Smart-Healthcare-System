@@ -59,6 +59,11 @@ class AuthController extends Controller
             ]);
         }
 
+        $user->load([
+            'dokter:id_dokter,id_pengguna',
+            'pasien:id_pasien,id_pengguna',
+        ]);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -69,6 +74,8 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'nama_lengkap' => $user->nama_lengkap,
+                'id_dokter' => optional($user->dokter)->id_dokter,
+                'id_pasien' => optional($user->pasien)->id_pasien,
             ],
         ]);
     }

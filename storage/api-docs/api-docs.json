@@ -1336,7 +1336,7 @@
                     "Appointment Management"
                 ],
                 "summary": "[AMAN] Update janji temu (Raihan)",
-                "description": "Endpoint untuk memperbarui janji temu. Dokter dapat: (1) menandai janji temu sebagai selesai (butuh rekam medis), atau (2) meng-assign ke dokter lain dengan mengubah field id_dokter selama tidak bentrok jadwal.",
+                "description": "Update janji temu dengan aturan peran:\n     * \\n- Pasien: edit keluhan/tanggal/waktu/dokter, bukan status; tidak boleh ubah janji yang sudah selesai/dibatalkan; wajib patuh shift dan anti-overlap.\n     * \\n- Dokter: hanya bisa menandai selesai (butuh rekam medis) atau assign id_dokter ke dokter lain dengan shift sama; hanya untuk janji terjadwal; patuh shift dan anti-overlap.",
                 "operationId": "ubahJanjiTemu",
                 "parameters": [
                     {
@@ -1387,6 +1387,35 @@
                                     }
                                 },
                                 "type": "object"
+                            },
+                            "examples": {
+                                "Pasien_Ubah": {
+                                    "summary": "Reschedule & edit keluhan oleh pasien",
+                                    "value": {
+                                        "keluhan": "Nyeri perut ringan sejak kemarin",
+                                        "tanggal_janji": "2025-11-21",
+                                        "waktu_mulai": "09:00",
+                                        "id_dokter": 2
+                                    }
+                                },
+                                "Pasien_GantiDokter": {
+                                    "summary": "Ganti dokter oleh pasien",
+                                    "value": {
+                                        "id_dokter": 5
+                                    }
+                                },
+                                "Dokter_TandaiSelesai": {
+                                    "summary": "Dokter menandai janji selesai",
+                                    "value": {
+                                        "status": "selesai"
+                                    }
+                                },
+                                "Dokter_AssignShiftSama": {
+                                    "summary": "Dokter assign ke dokter lain (shift sama)",
+                                    "value": {
+                                        "id_dokter": 7
+                                    }
+                                }
                             }
                         }
                     }

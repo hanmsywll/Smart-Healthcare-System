@@ -646,7 +646,9 @@ class JanjiTemuController extends Controller
      * operationId="ubahJanjiTemu",
      * tags={"Appointment Management"},
      * summary="[AMAN] Update janji temu (Raihan)",
-     * description="Endpoint untuk memperbarui janji temu. Dokter dapat: (1) menandai janji temu sebagai selesai (butuh rekam medis), atau (2) meng-assign ke dokter lain dengan mengubah field id_dokter selama tidak bentrok jadwal.",
+     * description="Update janji temu dengan aturan peran:
+     * \n- Pasien: edit keluhan/tanggal/waktu/dokter, bukan status; tidak boleh ubah janji yang sudah selesai/dibatalkan; wajib patuh shift dan anti-overlap.
+     * \n- Dokter: hanya bisa menandai selesai (butuh rekam medis) atau assign id_dokter ke dokter lain dengan shift sama; hanya untuk janji terjadwal; patuh shift dan anti-overlap.",
      * security={{"sanctum":{}}},
      * @OA\Parameter(
      * name="id",
@@ -656,14 +658,39 @@ class JanjiTemuController extends Controller
      * description="ID Janji Temu"
      * ),
      * @OA\RequestBody(
-     * required=true,
-     * @OA\JsonContent(
-     * @OA\Property(property="tanggal_janji", type="string", format="date", description="Tanggal janji (opsional)", example="2025-11-20"),
-     * @OA\Property(property="waktu_mulai", type="string", description="Waktu mulai (opsional)", example="10:00"),
-     * @OA\Property(property="waktu_selesai", type="string", description="Waktu selesai (opsional)"),
-     * @OA\Property(property="status", type="string", enum={"terjadwal", "selesai", "dibatalkan"}, description="Status (opsional)", example="terjadwal"),
-     * @OA\Property(property="keluhan", type="string", description="Keluhan pasien (opsional)", example="Sakit kepala berdenyut dan mual sejak pagi")
-     * )
+     *   required=true,
+     *   @OA\MediaType(
+     *     mediaType="application/json",
+     *     @OA\Schema(
+     *       @OA\Property(property="tanggal_janji", type="string", format="date", description="Tanggal janji (opsional)", example="2025-11-20"),
+     *       @OA\Property(property="waktu_mulai", type="string", description="Waktu mulai (opsional)", example="10:00"),
+     *       @OA\Property(property="waktu_selesai", type="string", description="Waktu selesai (opsional)"),
+     *       @OA\Property(property="status", type="string", enum={"terjadwal", "selesai", "dibatalkan"}, description="Status (opsional)", example="terjadwal"),
+     *       @OA\Property(property="keluhan", type="string", description="Keluhan pasien (opsional)", example="Sakit kepala berdenyut dan mual sejak pagi")
+     *     ),
+     *     examples={
+     *       @OA\Examples(
+     *         example="Pasien_Ubah",
+     *         summary="Reschedule & edit keluhan oleh pasien",
+     *         value={"keluhan":"Nyeri perut ringan sejak kemarin","tanggal_janji":"2025-11-21","waktu_mulai":"09:00","id_dokter":2}
+     *       ),
+     *       @OA\Examples(
+     *         example="Pasien_GantiDokter",
+     *         summary="Ganti dokter oleh pasien",
+     *         value={"id_dokter":5}
+     *       ),
+     *       @OA\Examples(
+     *         example="Dokter_TandaiSelesai",
+     *         summary="Dokter menandai janji selesai",
+     *         value={"status":"selesai"}
+     *       ),
+     *       @OA\Examples(
+     *         example="Dokter_AssignShiftSama",
+     *         summary="Dokter assign ke dokter lain (shift sama)",
+     *         value={"id_dokter":7}
+     *       )
+     *     }
+     *   )
      * ),
      * @OA\Response(
      * response=200,

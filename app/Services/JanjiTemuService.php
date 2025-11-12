@@ -5,19 +5,17 @@ namespace App\Services;
 use App\Models\Dokter;
 use App\Models\JanjiTemu;
 use App\Models\Pasien;
-use App\Models\RekamMedis;
 use App\Models\Pengguna;
+use App\Models\RekamMedis;
 use App\Repositories\JanjiTemuRepository;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Auth\Access\AuthorizationException;
-
 
 class JanjiTemuService
 {
     protected $janjiTemuRepository;
-
 
     public function __construct(JanjiTemuRepository $janjiTemuRepository)
     {
@@ -46,7 +44,7 @@ class JanjiTemuService
                     'hari' => $date->format('l'),
                     'jam_terisi' => $waktuTerisi->isEmpty() ? 'Belum ada janji temu' : $waktuTerisi->toArray(),
                     'slot_tersedia' => $slotTersedia,
-                    'shift' => $dokter->shift
+                    'shift' => $dokter->shift,
                 ];
             }
 
@@ -56,7 +54,7 @@ class JanjiTemuService
                 'spesialisasi' => $dokter->spesialisasi,
                 'biaya_konsultasi' => $dokter->biaya_konsultasi,
                 'shift' => $dokter->shift,
-                'jadwal_ketersediaan' => $jadwal
+                'jadwal_ketersediaan' => $jadwal,
             ];
         }
 
@@ -81,7 +79,7 @@ class JanjiTemuService
                 '15:00',
                 '16:00',
                 '17:00',
-                '18:00'
+                '18:00',
             ],
             'malam' => [
                 '19:00',
@@ -95,8 +93,8 @@ class JanjiTemuService
                 '03:00',
                 '04:00',
                 '05:00',
-                '06:00'
-            ]
+                '06:00',
+            ],
         ];
 
         $availableSlots = $shiftSlots[$shift] ?? [];
@@ -125,7 +123,7 @@ class JanjiTemuService
         }
 
         $dokter = Dokter::find($data['id_dokter']);
-        if (!$dokter) {
+        if (! $dokter) {
             throw new \Exception('Dokter tidak ditemukan');
         }
 
@@ -162,7 +160,7 @@ class JanjiTemuService
         }
 
         $pasien = Pasien::where('id_pengguna', $user->id_pengguna)->first();
-        if (!$pasien) {
+        if (! $pasien) {
             throw new \Exception('Data pasien tidak ditemukan');
         }
 
@@ -189,7 +187,7 @@ class JanjiTemuService
         $order = null;
         if ($sort) {
             $sort = strtolower($sort);
-            $order = in_array($sort, ['asc','desc']) ? $sort : ($sort === 'terlama' ? 'asc' : ($sort === 'terbaru' ? 'desc' : null));
+            $order = in_array($sort, ['asc', 'desc']) ? $sort : ($sort === 'terlama' ? 'asc' : ($sort === 'terbaru' ? 'desc' : null));
         }
 
         $items = $order
@@ -198,6 +196,7 @@ class JanjiTemuService
         foreach ($items as $item) {
             $this->autoCancelIfPast($item);
         }
+
         return $items;
     }
 
@@ -210,6 +209,7 @@ class JanjiTemuService
         if ($janjiTemu) {
             $this->autoCancelIfPast($janjiTemu);
         }
+
         return $janjiTemu;
     }
 
@@ -221,7 +221,7 @@ class JanjiTemuService
         $order = null;
         if ($sort) {
             $sort = strtolower($sort);
-            $order = in_array($sort, ['asc','desc']) ? $sort : ($sort === 'terlama' ? 'asc' : ($sort === 'terbaru' ? 'desc' : null));
+            $order = in_array($sort, ['asc', 'desc']) ? $sort : ($sort === 'terlama' ? 'asc' : ($sort === 'terbaru' ? 'desc' : null));
         }
 
         $items = $order
@@ -230,6 +230,7 @@ class JanjiTemuService
         foreach ($items as $item) {
             $this->autoCancelIfPast($item);
         }
+
         return $items;
     }
 
@@ -241,7 +242,7 @@ class JanjiTemuService
         $order = null;
         if ($sort) {
             $sort = strtolower($sort);
-            $order = in_array($sort, ['asc','desc']) ? $sort : ($sort === 'terlama' ? 'asc' : ($sort === 'terbaru' ? 'desc' : null));
+            $order = in_array($sort, ['asc', 'desc']) ? $sort : ($sort === 'terlama' ? 'asc' : ($sort === 'terbaru' ? 'desc' : null));
         }
 
         $items = $order
@@ -250,6 +251,7 @@ class JanjiTemuService
         foreach ($items as $item) {
             $this->autoCancelIfPast($item);
         }
+
         return $items;
     }
 
@@ -265,13 +267,13 @@ class JanjiTemuService
         if ($user) {
             if ($user->role === 'pasien') {
                 $pasien = Pasien::where('id_pengguna', $user->id_pengguna)->first();
-                if (!$pasien) {
+                if (! $pasien) {
                     throw new \Exception('Data pasien tidak ditemukan');
                 }
                 $idPasien = $pasien->id_pasien;
             } elseif ($user->role === 'dokter') {
                 $dokter = Dokter::where('id_pengguna', $user->id_pengguna)->first();
-                if (!$dokter) {
+                if (! $dokter) {
                     throw new \Exception('Data dokter tidak ditemukan');
                 }
                 $idDokter = $dokter->id_dokter;
@@ -282,6 +284,7 @@ class JanjiTemuService
         foreach ($items as $item) {
             $this->autoCancelIfPast($item);
         }
+
         return $items;
     }
 
@@ -293,9 +296,10 @@ class JanjiTemuService
     {
         if ($user->role === 'pasien') {
             $pasien = Pasien::where('id_pengguna', $user->id_pengguna)->first();
-            if (!$pasien) {
+            if (! $pasien) {
                 throw new \Exception('Data pasien tidak ditemukan');
             }
+
             return [
                 'total' => $this->janjiTemuRepository->countByPasien($pasien->id_pasien),
                 'aktif' => $this->janjiTemuRepository->countActiveByPasien($pasien->id_pasien),
@@ -306,9 +310,10 @@ class JanjiTemuService
 
         if ($user->role === 'dokter') {
             $dokter = Dokter::where('id_pengguna', $user->id_pengguna)->first();
-            if (!$dokter) {
+            if (! $dokter) {
                 throw new \Exception('Data dokter tidak ditemukan');
             }
+
             return [
                 'total' => $this->janjiTemuRepository->countByDokter($dokter->id_dokter),
                 'aktif' => $this->janjiTemuRepository->countActiveByDokter($dokter->id_dokter),
@@ -348,7 +353,7 @@ class JanjiTemuService
 
         if ($user->role === 'pasien') {
             $pasien = Pasien::where('id_pengguna', $user->id_pengguna)->first();
-            if (!$pasien || $janjiTemu->id_pasien !== $pasien->id_pasien) {
+            if (! $pasien || $janjiTemu->id_pasien !== $pasien->id_pasien) {
                 throw new AuthorizationException('Anda tidak memiliki akses ke janji temu ini');
             }
             if (in_array($janjiTemu->status, ['dibatalkan', 'selesai'])) {
@@ -356,7 +361,7 @@ class JanjiTemuService
             }
             $allowedKeys = ['keluhan', 'tanggal_janji', 'waktu_mulai', 'id_dokter'];
             $unknownKeys = array_diff(array_keys($data), $allowedKeys);
-            if (!empty($unknownKeys)) {
+            if (! empty($unknownKeys)) {
                 throw new AuthorizationException('Pasien hanya dapat mengubah keluhan, tanggal, waktu, atau dokter');
             }
             if (isset($data['status'])) {
@@ -382,14 +387,12 @@ class JanjiTemuService
 
         if ($user->role === 'dokter') {
             $dokter = Dokter::where('id_pengguna', $user->id_pengguna)->first();
-            if (!$dokter || $janjiTemu->id_dokter !== $dokter->id_dokter) {
+            if (! $dokter || $janjiTemu->id_dokter !== $dokter->id_dokter) {
                 throw new AuthorizationException('Anda hanya dapat mengakses janji temu milik Anda');
             }
-            // Dokter boleh: 1) menandai selesai, atau 2) meng-assign ke dokter lain (ubah id_dokter)
-            // Batasi agar dokter tidak mengubah field lain selain 'status' dan 'id_dokter'
             $allowedKeys = ['id_dokter', 'status'];
             $unknownKeys = array_diff(array_keys($data), $allowedKeys);
-            if (!empty($unknownKeys)) {
+            if (! empty($unknownKeys)) {
                 throw new AuthorizationException('Dokter hanya dapat mengubah dokter penanggung jawab atau menandai selesai');
             }
             // Jika mengubah status, dokter hanya boleh ke 'selesai'
@@ -406,7 +409,7 @@ class JanjiTemuService
             // Jika dokter menandai selesai, pastikan rekam medis untuk janji temu ini sudah ada
             if (isset($data['status']) && $data['status'] === 'selesai') {
                 $rekamMedis = RekamMedis::where('id_janji_temu', $id)->first();
-                if (!$rekamMedis) {
+                if (! $rekamMedis) {
                     throw new \Exception('rekam medis belum tersedia untuk janji temu ini');
                 }
                 // Pastikan konsistensi data rekam medis dengan janji temu
@@ -414,9 +417,7 @@ class JanjiTemuService
                     throw new \Exception('rekam medis tidak sesuai dengan janji temu ini');
                 }
             }
-            // Jika dokter melakukan assign ke dokter lain (ubah id_dokter), validasi akan diproses di bawah:
-            // - Validasi shift dokter tujuan terhadap waktu_mulai saat ini
-            // - Validasi bentrok jadwal (overlap) dengan janji dokter tujuan
+            // Validasi reassign: shift dokter tujuan harus sama dengan dokter saat ini
             if (isset($data['id_dokter'])) {
                 $dokterBaru = Dokter::find($data['id_dokter']);
                 $dokterLama = Dokter::find($janjiTemu->id_dokter);
@@ -427,7 +428,7 @@ class JanjiTemuService
         }
 
         // Otomatis hitung waktu_selesai jika waktu_mulai diupdate
-        if (isset($data['waktu_mulai']) && !isset($data['waktu_selesai'])) {
+        if (isset($data['waktu_mulai']) && ! isset($data['waktu_selesai'])) {
             $data['waktu_selesai'] = Carbon::parse($data['waktu_mulai'])->addHour()->format('H:i:s');
         }
 
@@ -482,7 +483,7 @@ class JanjiTemuService
 
         if ($user->role === 'pasien') {
             $pasien = Pasien::where('id_pengguna', $user->id_pengguna)->first();
-            if (!$pasien || $janjiTemu->id_pasien !== $pasien->id_pasien) {
+            if (! $pasien || $janjiTemu->id_pasien !== $pasien->id_pasien) {
                 throw new AuthorizationException('Anda tidak memiliki akses ke janji temu ini');
             }
         }
@@ -527,9 +528,15 @@ class JanjiTemuService
     private function autoCancelIfPast(JanjiTemu $janjiTemu)
     {
         try {
-            if (!$janjiTemu) return;
-            if ($janjiTemu->status === 'selesai') return;
-            if ($janjiTemu->status !== 'terjadwal') return;
+            if (! $janjiTemu) {
+                return;
+            }
+            if ($janjiTemu->status === 'selesai') {
+                return;
+            }
+            if ($janjiTemu->status !== 'terjadwal') {
+                return;
+            }
 
             $tanggal = Carbon::parse($janjiTemu->tanggal_janji);
             if ($tanggal->isBefore(Carbon::today())) {

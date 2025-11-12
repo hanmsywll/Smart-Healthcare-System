@@ -1838,6 +1838,245 @@
                 ]
             }
         },
+        "/rekam-medis": {
+            "get": {
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "[AMAN] Daftar semua rekam medis",
+                "description": "Mengambil semua rekam medis beserta relasi pasien, dokter, dan janji temu.",
+                "operationId": "listRekamMedis",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil daftar rekam medis",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RekamMedis"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "[AMAN] Tambah rekam medis",
+                "description": "Membuat data rekam medis baru.",
+                "operationId": "createRekamMedis",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateRekamMedisRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Rekam medis berhasil ditambahkan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rekam medis berhasil ditambahkan"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/RekamMedis"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/rekam-medis/{id}": {
+            "get": {
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "[AMAN] Detail rekam medis",
+                "description": "Mengambil detail satu rekam medis dengan relasi.",
+                "operationId": "getRekamMedis",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID rekam medis",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RekamMedis"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Data tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "[AMAN] Ubah rekam medis",
+                "description": "Memperbarui data rekam medis yang ada.",
+                "operationId": "updateRekamMedis",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID rekam medis",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateRekamMedisRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rekam medis berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rekam medis berhasil diperbarui"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/RekamMedis"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Data tidak ditemukan"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "[AMAN] Hapus rekam medis",
+                "description": "Menghapus (soft delete) sebuah rekam medis.",
+                "operationId": "deleteRekamMedis",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID rekam medis",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rekam medis berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rekam medis berhasil dihapus"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Data tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/status": {
             "get": {
                 "tags": [
@@ -2120,6 +2359,130 @@
                 },
                 "type": "object"
             },
+            "RekamMedis": {
+                "title": "Rekam Medis (Respons)",
+                "description": "Model Rekam Medis (Respons)",
+                "properties": {
+                    "id_rekam_medis": {
+                        "type": "integer"
+                    },
+                    "id_pasien": {
+                        "type": "integer"
+                    },
+                    "id_dokter": {
+                        "type": "integer"
+                    },
+                    "id_janji_temu": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "tanggal_kunjungan": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "diagnosis": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "tindakan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "catatan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "pasien": {
+                        "$ref": "#/components/schemas/Patient"
+                    },
+                    "dokter": {
+                        "$ref": "#/components/schemas/Doctor"
+                    },
+                    "janjiTemu": {
+                        "$ref": "#/components/schemas/JanjiTemu"
+                    }
+                },
+                "type": "object"
+            },
+            "CreateRekamMedisRequest": {
+                "title": "Create Rekam Medis Request",
+                "description": "Body request untuk membuat Rekam Medis",
+                "required": [
+                    "id_pasien",
+                    "id_dokter",
+                    "tanggal_kunjungan"
+                ],
+                "properties": {
+                    "id_pasien": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "id_dokter": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "id_janji_temu": {
+                        "type": "integer",
+                        "example": 10,
+                        "nullable": true
+                    },
+                    "tanggal_kunjungan": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-11-12"
+                    },
+                    "diagnosis": {
+                        "type": "string",
+                        "example": "Hipertensi stadium 1"
+                    },
+                    "tindakan": {
+                        "type": "string",
+                        "example": "Pemberian obat dan edukasi diet"
+                    },
+                    "catatan": {
+                        "type": "string",
+                        "example": "Kontrol 2 minggu lagi"
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateRekamMedisRequest": {
+                "title": "Update Rekam Medis Request",
+                "description": "Body request untuk memperbarui Rekam Medis",
+                "properties": {
+                    "id_pasien": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "id_dokter": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "id_janji_temu": {
+                        "type": "integer",
+                        "example": 10,
+                        "nullable": true
+                    },
+                    "tanggal_kunjungan": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-11-13"
+                    },
+                    "diagnosis": {
+                        "type": "string",
+                        "example": "Migrain"
+                    },
+                    "tindakan": {
+                        "type": "string",
+                        "example": "Analgesik dan istirahat"
+                    },
+                    "catatan": {
+                        "type": "string",
+                        "example": "Kurangi kafein"
+                    }
+                },
+                "type": "object"
+            },
             "UserProfile": {
                 "title": "User Profile",
                 "description": "User profile response",
@@ -2193,6 +2556,10 @@
         {
             "name": "Patients",
             "description": "Patients"
+        },
+        {
+            "name": "Medical Records",
+            "description": "Medical Records"
         },
         {
             "name": "Status",

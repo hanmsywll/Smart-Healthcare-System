@@ -11,7 +11,7 @@ class DetailResep extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'detail_resep';
-    protected $primaryKey = 'id_detail_resep';
+    protected $primaryKey = 'id_detail';
 
     protected $fillable = [
         'id_resep',

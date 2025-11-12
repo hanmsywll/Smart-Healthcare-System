@@ -18,6 +18,7 @@ class Dokter extends Model
         'spesialisasi',
         'no_lisensi',
         'biaya_konsultasi',
+        'shift',
     ];
 
     public function pengguna()

@@ -1,0 +1,1111 @@
+# Smart Healthcare System API Documentation & Testing Guide
+
+## Base URL
+`http://localhost:8000/api`
+
+## 🧭 Overview Endpoint API
+
+Ringkasan endpoint yang tersedia saat ini, fungsi singkat, dan role akses:
+
+### Authentication
+- POST `/auth/register/pasien` — Registrasi pasien baru — Role: Public
+- POST `/auth/register/dokter` — Registrasi dokter baru — Role: Public
+- POST `/auth/login` — Login dan mendapatkan token — Role: Public
+- POST `/auth/logout` — Logout, revoke token saat ini — Role: Auth (semua)
+- POST `/auth/change-password-public` — Ganti password via email (publik, dijaga env) — Role: Public
+
+### Appointments (Janji Temu)
+- GET `/janji/ketersediaan` — Daftar ketersediaan dokter 7 hari ke depan — Role: Public
+- POST `/janji` — Buat/booking janji temu — Role: Auth (pasien)
+- GET `/janji/cari` — Pencarian janji temu (filter per-role: dokter=nama_dokter, pasien=nama_pasien, admin=semua) — Role: Auth (pasien/dokter/admin)
+- GET `/janji/{id}` — Detail janji temu — Role: Auth (sesuai peran)
+- PUT `/janji/{id}` — Ubah janji (aturan per-role) — Role: Auth (pasien/dokter/admin)
+- DELETE `/janji/{id}` — Batalkan janji temu — Role: Auth (pasien/admin)
+- GET `/janji` — List janji (filter per-role) — Role: Auth (pasien/dokter/admin)
+- GET `/janji/statistik` — Statistik janji (total & aktif) — Role: Auth (per-role)
+
+### Misc
+- GET `/status` — Health check — Role: Public
+- GET `/user` — Profil user saat ini — Role: Auth (semua)
+
+## 🚀 Quick Start Testing Guide
+
+### 1. Health Check (No Auth Required)
+**GET** `/status`
+
+**Purpose**: Check if API is running
+
+**Response (200)**:
+```json
+{
+    "status": "success",
+    "message": "API is running"
+}
+```
+
+---
+
+### 2. Authentication Testing
+
+#### A. Login Dokter (Doctor Login)
+**POST** `/auth/login`
+
+**Request Body**:
+```json
+{
+    "email": "raihanstrange@gmail.com",
+    "password": "qwerty123"
+}
+```
+
+**Expected Response (200)**:
+```json
+{
+    "access_token": "4|XoaPeowmUTjTKdUPbb5qLL1uvuc1ym5SudezOFDP71ea6695",
+    "token_type": "Bearer"
+}
+```
+
+#### B. Login Pasien (Patient Login)
+**POST** `/auth/login`
+
+**Request Body**:
+```json
+{
+    "email": "raihanstark@gmail.com",
+    "password": "qwerty123"
+}
+```
+
+---
+
+### 🔓 Logout (Semua Role)
+
+**POST** `/auth/logout`
+
+**Headers**:
+```
+Authorization: Bearer [token]
+```
+
+**Response (200)**:
+```json
+{ "message": "Successfully logged out" }
+```
+
+---
+
+### 3. Registration
+
+#### A. Registrasi Pasien
+**POST** `/auth/register/pasien`
+
+**Body**:
+```json
+{
+  "email": "pasien@example.com",
+  "password": "qwerty123",
+  "nama_lengkap": "Nama Pasien",
+  "no_telepon": "081234567890",
+  "tanggal_lahir": "2000-01-01",
+  "golongan_darah": "O",
+  "alamat": "Jl. Contoh No. 1"
+}
+```
+
+**Response (201)**: token akses dan data pasien.
+
+#### B. Registrasi Dokter
+**POST** `/auth/register/dokter`
+
+**Body**:
+```json
+{
+  "email": "dokter@example.com",
+  "password": "qwerty123",f
+  "nama_lengkap": "Nama Dokter",
+  "no_telepon": "081234567891",
+  "spesialisasi": "Umum",
+  "no_lisensi": "LIS-001",
+  "biaya_konsultasi": 150000,
+  "shift": "pagi"
+}
+```
+
+**Response (201)**: token akses dan data dokter.
+
+---
+
+### 🔐 Change Password (Public Only)
+
+Untuk saat ini, hanya endpoint publik yang tersedia untuk mengganti password. Endpoint lain terkait password telah dihapus.
+
+**POST** `/auth/change-password-public`
+
+**Body**:
+```json
+{
+  "email": "user@example.com",
+  "new_password": "passwordBaru123",
+  "new_password_confirmation": "passwordBaru123"
+}
+```
+
+**Response (200)**:
+```json
+{
+  "message": "Password berhasil diubah"
+}
+```
+
+**Guarding & Konfigurasi**:
+- `ALLOW_PUBLIC_PASSWORD_CHANGE`: default `false`. Jika `false`, endpoint akan `403` kecuali email ada dalam whitelist.
+- `PUBLIC_PASSWORD_CHANGE_WHITELIST`: daftar email yang diizinkan (comma-separated), misalnya: `raihanstrange@gmail.com,raihanwong@gmail.com`.
+
+**Errors**:
+- 403: `{ "message": "Fitur ini dinonaktifkan oleh konfigurasi environment" }`
+- 404: `{ "message": "User not found" }`
+- 422: Validasi password atau email tidak valid
+
+**Konfigurasi .env**:
+```
+ALLOW_PUBLIC_PASSWORD_CHANGE=false
+# Izinkan email tertentu meski fitur global off
+PUBLIC_PASSWORD_CHANGE_WHITELIST=raihanstrange@gmail.com,raihanwong@gmail.com
+```
+
+---
+
+## 👨‍⚕️ DOCTOR ROLE FEATURES
+
+### 📅 Doctor Availability Management
+
+#### Get All Doctor Availability (Public)
+**GET** `/janji/ketersediaan`
+
+**Purpose**: Get all doctors with their availability for next 7 days
+
+**Expected Response (200)**:
+```json
+[
+    {
+        "id_dokter": 1,
+        "nama_dokter": "Raihan Strange",
+        "spesialisasi": "Ahli Sihir",
+        "biaya_konsultasi": 100000.00,
+        "shift": "pagi",
+        "jadwal_ketersediaan": [
+            {
+                "tanggal": "2025-11-09",
+                "hari": "Sunday",
+                "jam_terisi": "Belum ada janji temu",
+                "slot_tersedia": ["07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"],
+                "shift": "pagi"
+            }
+        ]
+    }
+]
+```
+
+---
+
+### 🔍 Appointment Search (Doctor)
+
+#### Search Appointments (Requires Auth)
+**GET** `/janji/cari`
+
+**Headers Required**:
+```
+Authorization: Bearer [doctor_token]
+```
+
+**Query Parameters**:
+- `tanggal` (optional): Filter by date (YYYY-MM-DD)
+- `nama_dokter` (optional): Filter by doctor name
+ - `nama_pasien` (optional): Filter by patient name
+
+**Example - Search by Date**:
+```
+GET /janji/cari?tanggal=2025-11-10
+```
+
+**Example - Search by Doctor Name**:
+```
+GET /janji/cari?nama_dokter=Strange
+```
+
+**Example - Combined Search**:
+```
+GET /janji/cari?tanggal=2025-11-10&nama_dokter=Strange
+```
+
+**Example - Search by Patient Name**:
+```
+GET /janji/cari?nama_pasien=Raihan
+```
+
+**Expected Response (200)**:
+```json
+{
+  "success": true,
+  "message": "Berhasil menemukan 1 janji temu",
+  "data": [
+    {
+      "id_janji_temu": 2,
+      "pasien": { "id_pasien": 2, "pengguna": { "nama_lengkap": "Raihan Stark" } },
+      "dokter": { "id_dokter": 1, "pengguna": { "nama_lengkap": "Raihan Strange" }, "spesialisasi": "Ahli Sihir" },
+      "tanggal_janji": "2025-11-10",
+      "waktu_mulai": "09:00:00",
+      "waktu_selesai": "10:00:00",
+      "status": "terjadwal",
+      "keluhan": "Sakit kepala dan demam"
+    }
+  ],
+  "timestamp": "2025-11-09T09:30:00.000000Z"
+}
+```
+
+---
+
+### ✅ Complete Appointment (Doctor Only)
+
+#### Update Appointment Status to "selesai" (Requires Auth)
+**PUT** `/janji/{id}`
+
+**Headers Required**:
+```
+Authorization: Bearer [doctor_token]
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+    "status": "selesai"
+}
+```
+
+**Role-Based Restriction**:
+- **Doctors**: Can only complete appointments (status: "selesai")
+
+**Expected Success Response (200)**:
+```json
+{
+    "message": "Janji temu berhasil diperbarui",
+    "data": {
+        "id_janji_temu": 2,
+        "status": "selesai"
+    }
+}
+```
+
+**Expected Error Response (403)**:
+```json
+{
+    "error": "Dokter hanya dapat menyelesaikan janji temu"
+}
+```
+
+**Panduan Body PUT (Doctor)**
+- Menyelesaikan janji:
+```json
+{
+  "status": "selesai"
+}
+```
+- Assign ke dokter lain:
+```json
+{
+  "id_dokter": 2
+}
+```
+- Catatan:
+  - Hanya untuk janji berstatus `terjadwal`.
+  - Dokter tujuan harus memiliki shift yang sama.
+  - Validasi bentrok slot tetap berlaku pada dokter tujuan.
+
+**Error Cases**:
+- 400: Dokter hanya dapat menyelesaikan janji temu jika rekam medis sudah dibuat
+- 403: Dokter hanya dapat menandai selesai/assign, tidak bisa ubah field lain
+- 403: Hanya janji `terjadwal` yang bisa selesai/assign
+
+### 🔄 Assign Janji ke Dokter Lain (Doctor Only)
+**PUT** `/janji/{id}`
+
+**Body (assign)**:
+```json
+{
+  "id_dokter": 2
+}
+```
+
+**Prasyarat**
+- Janji harus berstatus `terjadwal`.
+- Dokter tujuan wajib memiliki shift yang sama dengan dokter saat ini.
+- Slot waktu janji yang berjalan tidak boleh bentrok dengan jadwal dokter tujuan.
+
+**Headers**
+```
+Authorization: Bearer [doctor_token]
+Content-Type: application/json
+```
+
+**Langkah Uji di Postman**
+1) Dapatkan `id` janji yang akan di-assign (mis. dari `GET /janji` atau `GET /janji/cari`).
+2) Tentukan `id_dokter` tujuan yang memiliki shift sama.
+3) Kirim `PUT /janji/{id}` dengan body di atas.
+4) Pastikan respons 200 dan data janji memperlihatkan `id_dokter` baru.
+
+**Contoh Respons Sukses (200)**
+```json
+{
+  "success": true,
+  "message": "Jadwal janji temu berhasil diperbarui",
+  "data": {
+    "id_janji_temu": 12,
+    "id_dokter": 2,
+    "status": "terjadwal"
+  }
+}
+```
+
+**Kasus Error Umum**
+- 403: Janji bukan milik dokter saat ini, atau janji tidak berstatus `terjadwal`.
+- 400: Dokter tujuan tidak memiliki shift yang sama.
+- 409: Slot waktu bertabrakan dengan jadwal dokter tujuan.
+- 422: `id_dokter` tidak valid (tidak ditemukan di database).
+
+**Tips**
+- Gunakan `GET /janji/ketersediaan` untuk melihat ketersediaan dan shift dokter.
+- Jika perlu pindah waktu, minta admin yang mengubah karena dokter tidak boleh mengubah tanggal/waktu.
+
+Validasi shift dan bentrok jadwal berlaku.
+Dokter tujuan harus memiliki shift yang sama.
+
+---
+
+## 🧑‍⚕️ PATIENT ROLE FEATURES
+
+### 📋 Appointment Booking (Patient)
+
+#### Quick Appointment Booking (Requires Auth)
+**POST** `/janji`
+
+**Headers Required**:
+```
+Authorization: Bearer [patient_token]
+Content-Type: application/json
+```
+
+**Request Body - Success Case**:
+```json
+{
+    "id_dokter": 1,
+    "tanggal": "2025-11-10",
+    "waktu_mulai": "09:00",
+    "keluhan": "Sakit kepala dan demam"
+}
+```
+
+**Expected Response (201)**:
+```json
+{
+    "message": "Janji temu berhasil dibooking",
+    "data": {
+        "id_janji_temu": 1,
+        "id_pasien": 2,
+        "id_dokter": 1,
+        "tanggal_janji": "2025-11-10",
+        "waktu_mulai": "09:00",
+        "waktu_selesai": "10:00",
+        "status": "terjadwal",
+        "keluhan": "Sakit kepala dan demam",
+        "created_at": "2025-11-09T09:30:00.000000Z",
+        "updated_at": "2025-11-09T09:30:00.000000Z"
+    }
+}
+```
+
+**Request Body - Duplicate Slot (Error Case)**:
+```json
+{
+    "id_dokter": 1,
+    "tanggal": "2025-11-10",
+    "waktu_mulai": "09:00",
+    "keluhan": "Coba booking ulang slot yang sama"
+}
+```
+
+**Kemungkinan Respons Error**:
+- 409 Conflict: slot penuh
+```json
+{ "success": false, "message": "Maaf, slot waktu ini sudah penuh. Silakan pilih waktu lain" }
+```
+- 400 Bad Request: di luar jam kerja dokter
+```json
+{ "success": false, "message": "Dokter tidak tersedia pada jam ini. Silakan pilih waktu lain" }
+```
+- 400 Bad Request: waktu janji temu sudah terlewat (hari ini, jam < sekarang)
+```json
+{ "success": false, "message": "Waktu janji temu sudah terlewat, silakan pilih waktu lain" }
+```
+- 422 Unprocessable Entity: body tidak valid
+- 500 Internal Server Error: bentrok ("bertabrakan") saat booking saat ini terdeteksi sebagai error umum
+
+---
+
+### 🔍 Appointment Search (Patient)
+
+#### Search Patient's Appointments (Requires Auth)
+**GET** `/janji/cari`
+
+**Headers Required**:
+```
+Authorization: Bearer [patient_token]
+```
+
+**Query Parameters**:
+- `tanggal` (optional): Filter by date (YYYY-MM-DD)
+ - `nama_pasien` (optional): Filter by patient name
+
+**Example - Search by Date**:
+```
+GET /janji/cari?tanggal=2025-11-10
+```
+
+**Example - Search by Patient Name**:
+```
+GET /janji/cari?nama_pasien=Raihan
+```
+
+**Expected Response (200)**:
+```json
+{
+  "success": true,
+  "message": "Berhasil menemukan 1 janji temu",
+  "data": [
+    {
+      "id_janji_temu": 2,
+      "pasien": { "id_pasien": 2, "pengguna": { "nama_lengkap": "Raihan Stark" } },
+      "dokter": { "id_dokter": 1, "pengguna": { "nama_lengkap": "Raihan Strange" }, "spesialisasi": "Ahli Sihir" },
+      "tanggal_janji": "2025-11-10",
+      "waktu_mulai": "09:00:00",
+      "waktu_selesai": "10:00:00",
+      "status": "terjadwal",
+      "keluhan": "Sakit kepala dan demam"
+    }
+  ],
+  "timestamp": "2025-11-09T09:30:00.000000Z"
+}
+```
+
+---
+
+### ✏️ Edit Appointment (Patient)
+
+#### Edit Fields (Requires Auth)
+**PUT** `/janji/{id}`
+
+**Headers Required**:
+```
+Authorization: Bearer [patient_token]
+Content-Type: application/json
+```
+
+**Allowed Fields**:
+- `keluhan`, `tanggal_janji`, `waktu_mulai`, `id_dokter`
+
+**Restrictions**:
+- Tidak dapat mengubah `status`.
+- Tidak bisa edit jika janji `dibatalkan` atau `selesai`.
+- Tidak boleh memundurkan ke tanggal/waktu yang sudah lewat.
+- Selalu validasi shift dan bentrok jika mengubah dokter/waktu.
+
+**Example Request Body**:
+```json
+{
+  "keluhan": "Keluhan diperbarui",
+  "tanggal_janji": "2025-11-20",
+  "waktu_mulai": "10:00",
+  "id_dokter": 2
+}
+```
+
+**Panduan Body PUT (Patient)**
+- Ubah keluhan saja:
+```json
+{
+  "keluhan": "Keluhan diperbarui"
+}
+```
+- Ubah tanggal dan waktu saja:
+```json
+{
+  "tanggal_janji": "2025-11-20",
+  "waktu_mulai": "10:00"
+}
+```
+- Ganti dokter saja:
+```json
+{
+  "id_dokter": 2
+}
+```
+- Kombinasi (keluhan + tanggal/waktu + dokter):
+```json
+{
+  "keluhan": "Keluhan diperbarui",
+  "tanggal_janji": "2025-11-20",
+  "waktu_mulai": "10:00",
+  "id_dokter": 2
+}
+```
+- Catatan:
+  - `waktu_selesai` otomatis diisi +1 jam jika hanya `waktu_mulai` yang diubah.
+  - Tidak bisa ubah `status`.
+  - Tidak bisa edit jika janji `dibatalkan` atau `selesai`.
+  - Tidak boleh mengatur waktu/tanggal di masa lalu (termasuk hari ini, jam < sekarang).
+  - Validasi shift dan bentrok tetap berlaku bila mengubah dokter atau waktu.
+
+**Error Cases**:
+- 400: waktu sudah lewat / di luar jam kerja
+- 403: bukan pemilik / janji sudah dibatalkan/selesai
+- 409: bentrok dengan janji lain
+
+### ❌ Cancel Appointment (Patient/Admin)
+
+#### Batalkan Janji (Idempoten)
+**DELETE** `/janji/{id}`
+
+**Behavior**:
+- Pasien hanya dapat membatalkan janji miliknya.
+- Admin dapat membatalkan janji apa pun.
+- Idempoten: jika sudah dibatalkan, respon 200 dengan pesan "Anda sudah membatalkan".
+- Tidak dapat membatalkan janji yang sudah `selesai` (409).
+
+**Headers Required**:
+```
+Authorization: Bearer [patient_or_admin_token]
+```
+
+**Response (200)**:
+```json
+{ "success": true, "message": "Janji temu berhasil dibatalkan" }
+```
+
+### 🔍 Appointment Search (Patient)
+Lihat juga bagian pencarian untuk dokter; endpoint sama, hasil dibatasi milik pasien.
+
+---
+
+## 👤 USER PROFILE (ALL ROLES)
+
+### Get Current User Profile (Requires Auth)
+**GET** `/user`
+
+**Headers Required**:
+```
+Authorization: Bearer [token]
+```
+
+**Expected Response (200)**:
+```json
+{
+    "data": {
+        "id_pengguna": 2,
+        "nama_lengkap": "Raihan Stark",
+        "email": "raihanstark@gmail.com",
+        "role": "pasien",
+        "created_at": "2025-11-09T00:00:00.000000Z",
+        "updated_at": "2025-11-09T00:00:00.000000Z"
+    }
+}
+```
+
+---
+
+## 📋 Testing Checklist by Role
+
+### ✅ Basic Functionality (No Auth Required)
+- [ ] Health check endpoint working
+- [ ] Doctor login successful
+- [ ] Patient login successful
+
+### 👨‍⚕️ DOCTOR ROLE TESTING
+- [ ] Get doctor availability returns data
+- [ ] Search appointments by date working (Doctor)
+- [ ] Search appointments by doctor name working (Doctor)
+- [ ] Combined search (date + doctor) working (Doctor)
+- [ ] Doctor can complete appointments (status: "selesai")
+- [ ] Doctor cannot cancel appointments (blocked)
+- [ ] Doctor cannot book appointments (Patient feature)
+- [ ] Doctor can reassign appointment to same-shift doctor
+
+### 🧑‍⚕️ PATIENT ROLE TESTING
+- [ ] Successful appointment booking
+- [ ] Duplicate slot prevention working
+- [ ] Doctor shift filtering (pagi/malam) working
+- [ ] Available slots calculation correct
+- [ ] Search appointments by date working (Patient)
+- [ ] Search appointments by patient name working (Patient)
+- [ ] Combined search (date + doctor) working (Patient)
+- [ ] Patient can edit keluhan/tanggal/waktu/dokter (PUT)
+- [ ] Cancel appointment via DELETE works (idempoten)
+- [ ] Patient cannot complete appointments (blocked)
+- [ ] Edit time/date prevents past times (today < now)
+
+### 👤 USER PROFILE (ALL ROLES)
+- [ ] Current user endpoint returns correct data
+- [ ] Role information is accurate in response
+
+### ✅ Role-Based Access Control
+- [ ] Patient can edit allowed fields; cancel via DELETE
+- [ ] Doctor can only complete appointments
+- [ ] Error messages for unauthorized status updates
+- [ ] Token validation working for all protected endpoints
+
+### ✅ Error Handling
+- [ ] Invalid login credentials rejected
+- [ ] Missing auth token rejected
+- [ ] Invalid time slots rejected
+- [ ] Duplicate bookings prevented
+- [ ] Out-of-work-hours times rejected with helpful message
+
+---
+
+## 🔧 Postman Collection Setup
+
+### Environment Variables
+Create environment with these variables:
+```
+base_url: http://localhost:8000/api
+doctor_token: 4|XoaPeowmUTjTKdUPbb5qLL1uvuc1ym5SudezOFDP71ea6695
+patient_token: [get from patient login]
+```
+
+### Collection Structure by Role
+```
+Smart Healthcare API/
+├── 01. Health Check/
+│   └── GET Status
+├── 02. Authentication/
+│   ├── POST Doctor Login
+│   └── POST Patient Login
+├── 03. Doctor Role Features/
+│   ├── 📅 Doctor Availability/
+│   │   └── GET All Availability
+│   ├── 🔍 Appointment Search/
+│   │   ├── GET Search by Date
+│   │   ├── GET Search by Doctor Name
+│   │   └── GET Combined Search
+│   └── ✅ Complete Appointment/
+│       └── PUT Update Status to "selesai"
+├── 04. Patient Role Features/
+│   ├── 📋 Appointment Booking/
+│   │   └── POST Quick Booking
+│   ├── 🔍 Appointment Search/
+│   │   ├── GET Search by Date
+│   │   ├── GET Search by Doctor Name
+│   │   └── GET Combined Search
+│   └── ❌ Cancel Appointment/
+│       └── DELETE Cancel Appointment
+└── 05. User Profile (All Roles)/
+    └── GET Current User
+```
+
+---
+
+## 📊 Test Data Reference
+
+### Doctors Available
+| ID | Name | Specialization | Shift | Email |
+|----|------|----------------|-------|-------|
+| 1 | Raihan Strange | Ahli Sihir | pagi | raihanstrange@gmail.com |
+| 2 | Raihan Wong | Umum | malam | raiihanwong.malam@clinic.com |
+
+### Patients Available
+| ID | Name | Email |
+|----|------|-------|
+| 2 | Raihan Stark | raihanstark@gmail.com |
+
+---
+
+## 🚨 Common Issues & Solutions
+
+### 1. Token Expired
+**Solution**: Re-login to get new token
+
+### 2. 404 Not Found
+**Solution**: Check base URL and endpoint spelling
+
+### 3. 500 Internal Server Error
+**Solution**: Check Laravel logs in `storage/logs/laravel.log`
+
+### 4. Database Connection Error
+**Solution**: Ensure MySQL is running and `.env` configuration is correct
+
+---
+
+## 📝 Notes
+- Token expires after certain time - re-login if needed
+- Doctor availability shows next 7 days from current date
+- Shift "pagi": 07:00-18:00, Shift "malam": 19:00-23:00
+ - Shift "pagi": 07:00-18:00, Shift "malam": 19:00-06:00
+- Each appointment takes 1 hour slot
+- Duplicate bookings are prevented automatically
+
+---
+
+## 🔐 Role-Based Permissions Summary
+
+### 👨‍⚕️ DOCTOR ROLE
+✅ **Can Do:**
+- View doctor availability (all doctors)
+- Search appointments (by date, doctor name, or combined)
+- Complete appointments (update status to "selesai")
+ - Reassign appointment to another doctor with the same shift
+- View current user profile
+
+❌ **Cannot Do:**
+- Book appointments (Patient feature)
+- Cancel appointments (Patient feature)
+
+### 🧑‍⚕️ PATIENT ROLE
+✅ **Can Do:**
+- Book appointments (quick booking)
+- Search appointments (by date, doctor name, or combined)
+- Edit own appointments (keluhan/tanggal/waktu/dokter)
+- Cancel own appointments via DELETE
+- View current user profile
+
+❌ **Cannot Do:**
+- Complete appointments (Doctor feature)
+
+### 👤 ALL ROLES (Doctor & Patient)
+✅ **Can Do:**
+- Login and get authentication token
+- View current user profile
+- Search appointments with filters
+
+## Appointment Services
+
+### Get All Doctor Availability
+**GET** `/janji/ketersediaan`
+
+### List Janji Temu (Per-Role)
+**GET** `/janji`
+
+**Headers Required**:
+```
+Authorization: Bearer [token]
+```
+
+**Query**:
+- `sort` (opsional): `asc`/`desc` atau alias `terlama`/`terbaru`
+
+**Perilaku**:
+- Pasien: hanya melihat janji miliknya
+- Dokter: hanya melihat janji miliknya
+- Admin: melihat semua janji
+
+**Response (200)**:
+```json
+{ "data": [ /* array janji temu */ ] }
+```
+
+---
+
+### Detail Janji Temu
+**GET** `/janji/{id}`
+
+**Headers Required**:
+```
+Authorization: Bearer [token]
+```
+
+**Perilaku**:
+- Pasien/Dokter: hanya bisa akses janji milik sendiri
+- Admin: bisa akses semua
+
+**Response (200)**:
+```json
+{ "success": true, "data": { /* janji temu */ } }
+```
+**Errors**:
+- 403: bukan pemilik
+- 404: janji tidak ditemukan
+
+---
+
+### Statistik Janji
+**GET** `/janji/statistik`
+
+**Headers Required**:
+```
+Authorization: Bearer [token]
+```
+
+**Perilaku**:
+- Mengembalikan `total` dan `aktif` sesuai role (pasien/dokter/admin)
+
+**Response (200)**:
+```json
+{ "total": 42, "aktif": 17 }
+```
+
+
+Public endpoint to get all doctor availability for the next 7 days.
+
+Response (200):
+```json
+[
+    {
+        "id_dokter": 1,
+        "nama_dokter": "Dr. Andi Wijaya",
+        "spesialisasi": "Dokter Umum",
+        "biaya_konsultasi": 150000,
+        "shift": "Pagi",
+        "jadwal_ketersediaan": [
+            {
+                "tanggal": "2024-01-15",
+                "hari": "Senin",
+                "jam_terisi": ["08:00", "09:00"],
+                "shift": "Pagi",
+                "slot_tersedia": ["10:00", "11:00", "13:00", "14:00", "15:00", "16:00"]
+            }
+        ]
+    }
+]
+```
+
+### Quick Appointment Booking
+**POST** `/janji`
+
+Requires authentication (Bearer token).
+
+Request Headers:
+```
+Authorization: Bearer <your_access_token>
+Content-Type: application/json
+```
+
+Request Body:
+```json
+{
+    "id_dokter": 1,
+    "tanggal": "2024-01-15",
+    "waktu_mulai": "10:00",
+    "keluhan": "Sakit kepala dan demam"
+}
+```
+
+Response (201):
+```json
+{
+    "message": "Janji temu berhasil dibooking",
+    "data": {
+        "id_janji_temu": 1,
+        "id_pasien": 1,
+        "id_dokter": 1,
+        "tanggal_janji": "2024-01-15",
+        "waktu_mulai": "10:00",
+        "waktu_selesai": "11:00",
+        "status": "terjadwal",
+        "keluhan": "Sakit kepala dan demam",
+        "created_at": "2024-01-10T08:30:00.000000Z",
+        "updated_at": "2024-01-10T08:30:00.000000Z"
+    }
+}
+```
+
+Error Response (400):
+```json
+{
+    "error": "Slot waktu ini sudah terisi"
+}
+```
+
+## Test Status
+**GET** `/status`
+
+Simple health check endpoint.
+
+Response (200):
+```json
+{
+    "status": "success",
+    "message": "API is running"
+}
+```
+
+## Get Current User
+**GET** `/user`
+
+Requires authentication (Bearer token).
+
+Response (200):
+```json
+{
+    "id_pengguna": 1,
+    "nama": "John Doe",
+    "email": "john@example.com",
+    "role": "pasien",
+    "created_at": "2024-01-01T00:00:00.000000Z",
+    "updated_at": "2024-01-01T00:00:00.000000Z"
+}
+```
+ 
+ ---
+ 
+ ## 📊 Statistik Janji Temu (Per Role)
+ 
+### Get Stats (Requires Auth)
+**GET** `/janji/stats`
+ 
+ **Headers Required**:
+ ```
+ Authorization: Bearer [token]
+ ```
+ 
+**Respons (200)**:
+```json
+{
+  "total": 42,
+  "aktif": 17,
+  "selesai": 12,
+  "dibatalkan": 13
+}
+```
+ 
+**Catatan Definisi "aktif"**:
+- Aktif = status `terjadwal`.
+ 
+ **Perilaku per Role**:
+ - Pasien: dihitung hanya janji temu miliknya.
+ - Dokter: dihitung janji temu yang dijadwalkan ke dirinya.
+ - Admin/role lain: dihitung seluruh janji temu.
+ 
+ **Error (404)** jika data pasien/dokter tidak ditemukan:
+ ```json
+ {
+   "success": false,
+   "message": "Data pasien tidak ditemukan"
+ }
+ ```
+ 
+ ---
+ 
+ ## 📃 Daftar Janji + Sorting (Per Role)
+ 
+ ### List Janji Temu (Requires Auth)
+ **GET** `/janji`
+ 
+ **Query (opsional)**:
+ - `sort`: `terbaru`/`desc` atau `terlama`/`asc`
+ 
+ **Contoh**:
+ - `GET /janji?sort=terbaru`
+ - `GET /janji?sort=asc`
+ 
+ **Perilaku per Role**:
+ - Pasien: hanya melihat janji temu miliknya.
+ - Dokter: hanya melihat janji temu yang dijadwalkan ke dirinya.
+ - Admin: melihat semua janji temu.
+ 
+ ---
+ 
+ ## 🔄 Assign Janji ke Dokter Lain (Doctor Only)
+ 
+ ### Assign ke Dokter Lain (Requires Auth)
+ **PUT** `/janji/{id}`
+ 
+ **Headers**:
+ ```
+ Authorization: Bearer [doctor_token]
+ Content-Type: application/json
+ ```
+ 
+ **Body (assign)**:
+ ```json
+ {
+   "id_dokter": 2
+ }
+ ```
+ 
+ **Validasi**:
+ - Shift dokter tujuan harus sesuai dengan `waktu_mulai` janji.
+ - Tidak boleh bentrok jadwal dengan janji dokter tujuan pada tanggal yang sama.
+ 
+ **Sukses (200)**:
+ ```json
+ {
+   "success": true,
+   "message": "Jadwal janji temu berhasil diperbarui",
+   "data": {
+     "id_janji_temu": 10,
+     "id_dokter": 2
+   }
+ }
+ ```
+ 
+ **Error (422/400)** contoh:
+ ```json
+ {
+   "success": false,
+   "message": "Dokter ini hanya tersedia pada shift pagi (07:00 - 18:00)"
+ }
+ ```
+ atau
+ ```json
+ {
+   "success": false,
+   "message": "Slot waktu ini bertabrakan dengan janji temu yang sudah ada"
+ }
+ ```
+ 
+ ### Tandai Selesai (Doctor Only)
+ **PUT** `/janji/{id}`
+ 
+ **Body (selesai)**:
+ ```json
+ {
+   "status": "selesai"
+ }
+ ```
+ 
+ **Catatan**: membutuhkan rekam medis untuk janji tersebut dan harus konsisten dengan `id_dokter` dan `id_pasien` pada janji.
+ 
+ ---
+ 
+## 🛠️ Admin Role Features
+ 
+ Admin dapat mengakses seluruh data tanpa pembatasan pasien/dokter:
+ - **GET** `/janji` → semua janji temu (dukung `sort`).
+ - **GET** `/janji/stats` → statistik semua janji (`total`, `aktif`, `selesai`, `dibatalkan`).
+ - **GET** `/janji/{id}` → detail janji.
+ - **GET** `/janji/search` → pencarian bebas (tidak dibatasi pasien).
+ - **PUT** `/janji/{id}` → dapat memperbarui field bebas (tidak terkena pembatasan khusus pasien/dokter).
+ - **DELETE** `/janji/{id}` → dapat menghapus kecuali status `selesai`.
+ 
+ ---
+ 
+ ## ✅ Tambahan Checklist Testing
+ 
+### Doctor
+- [ ] GET `/janji/stats` menampilkan total, aktif, selesai, dibatalkan untuk dokter.
+ - [ ] GET `/janji?sort=terbaru` hanya janji milik dokter.
+ - [ ] PUT `/janji/{id}` dengan `id_dokter` berhasil assign bila tidak bentrok.
+ - [ ] PUT `/janji/{id}` dengan `status=selesai` gagal jika rekam medis belum ada.
+ 
+### Patient
+- [ ] GET `/janji/stats` menampilkan total, aktif, selesai, dibatalkan untuk pasien.
+ - [ ] GET `/janji?sort=terlama` hanya janji milik pasien.
+ - [ ] PUT `/janji/{id}` dengan `status=dibatalkan` sukses.
+ 
+ ### Admin
+ - [ ] GET `/janji/statistik` mengembalikan agregat seluruh janji.
+ - [ ] GET `/janji` tanpa filter mengembalikan semua janji.
+ - [ ] GET `/janji/cari` bebas filter nama/tanggal.
+ - [ ] PUT/DELETE `/janji/{id}` bekerja sesuai aturan (hapus gagal jika `selesai`; jika dihapus ulang, tampilkan pesan "Anda sudah membatalkan").
+#### Catatan Validasi Booking
+- Tidak boleh booking pada waktu yang sudah lewat di hari yang sama (respon 400).

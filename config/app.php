@@ -10,7 +10,8 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
     'asset_url' => env('ASSET_URL'),
     'timezone' => 'UTC',
-    'locale' => 'en',
+
+    'locale' => 'id',
     'fallback_locale' => 'en',
     'faker_locale' => 'en_US',
     'key' => env('APP_KEY'),

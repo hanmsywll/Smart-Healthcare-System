@@ -75,6 +75,7 @@ class JanjiTemuController extends Controller
 {
     protected $janjiTemuService;
 
+    // ini untuk manggil service JanjiTemu (service tu lebih ke business logic)
     public function __construct(JanjiTemuService $janjiTemuService)
     {
         $this->janjiTemuService = $janjiTemuService;

@@ -142,7 +142,6 @@ class JanjiTemuService
             }
         }
 
-        // Tidak boleh booking waktu yang sudah lewat pada hari yang sama
         try {
             $tanggalJanji = Carbon::parse($data['tanggal']);
             if ($tanggalJanji->isToday()) {
@@ -270,16 +269,13 @@ class JanjiTemuService
                     throw new \Exception('Data pasien tidak ditemukan');
                 }
                 $idPasien = $pasien->id_pasien;
-                // Pasien: boleh memfilter nama_dokter maupun nama_pasien; hasil tetap dalam scope id_pasien
             } elseif ($user->role === 'dokter') {
                 $dokter = Dokter::where('id_pengguna', $user->id_pengguna)->first();
                 if (!$dokter) {
                     throw new \Exception('Data dokter tidak ditemukan');
                 }
                 $idDokter = $dokter->id_dokter;
-                // Dokter: boleh memfilter nama_pasien maupun nama_dokter; hasil tetap dalam scope id_dokter
             }
-            // Admin: tidak ada pembatasan khusus
         }
 
         $items = $this->janjiTemuRepository->searchWithFilters($tanggal, $namaDokter, $idPasien, $idDokter, $namaPasien);
@@ -355,21 +351,17 @@ class JanjiTemuService
             if (!$pasien || $janjiTemu->id_pasien !== $pasien->id_pasien) {
                 throw new AuthorizationException('Anda tidak memiliki akses ke janji temu ini');
             }
-            // Pasien tidak bisa edit jika janji sudah dibatalkan/selesai
             if (in_array($janjiTemu->status, ['dibatalkan', 'selesai'])) {
                 throw new AuthorizationException('Janji temu ini tidak dapat diubah karena sudah dibatalkan atau selesai');
             }
-            // Batasi field yang boleh diubah oleh pasien
             $allowedKeys = ['keluhan', 'tanggal_janji', 'waktu_mulai', 'id_dokter'];
             $unknownKeys = array_diff(array_keys($data), $allowedKeys);
             if (!empty($unknownKeys)) {
                 throw new AuthorizationException('Pasien hanya dapat mengubah keluhan, tanggal, waktu, atau dokter');
             }
-            // Pasien tidak boleh mengubah status
             if (isset($data['status'])) {
                 throw new AuthorizationException('Pasien tidak dapat mengubah status janji temu');
             }
-            // Tidak boleh memundurkan ke waktu/tanggal yang sudah lewat
             if (isset($data['tanggal_janji']) || isset($data['waktu_mulai'])) {
                 $tanggalTarget = $data['tanggal_janji'] ?? $janjiTemu->tanggal_janji;
                 $waktuTarget = $data['waktu_mulai'] ?? $janjiTemu->waktu_mulai;

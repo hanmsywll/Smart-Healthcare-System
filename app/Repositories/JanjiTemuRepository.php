@@ -76,7 +76,7 @@ class JanjiTemuRepository
             ->where(function ($query) use ($waktuMulaiBaruCarbon, $waktuSelesaiBaruCarbon) {
                 $query->where(function ($q) use ($waktuMulaiBaruCarbon, $waktuSelesaiBaruCarbon) {
                     $q->whereRaw("waktu_mulai < ? AND waktu_selesai > ?", [
-                        $waktuSelesaiBaruCarbon->format('H:i:s'),
+                        $waktuSelesaiBaruCarbon->format('H:i:s'), 
                         $waktuMulaiBaruCarbon->format('H:i:s')
                     ]);
                 });
@@ -87,7 +87,7 @@ class JanjiTemuRepository
     /**
      * Mengambil HANYA jam mulai yang sudah terisi untuk endpoint publik
      */
-    public function     getWaktuTerisi($idDokter, $tanggal)
+    public function getWaktuTerisi($idDokter, $tanggal)
     {
         return JanjiTemu::where('id_dokter', $idDokter)
             ->where('tanggal_janji', $tanggal)

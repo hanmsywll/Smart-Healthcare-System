@@ -7,6 +7,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\StatusController;
 use App\Http\Controllers\API\RekamMedisController;
+use App\Http\Controllers\ResepController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/janji/{id}', [JanjiTemuController::class, 'getDetailJanjiTemu']);
     Route::put('/janji/{id}', [JanjiTemuController::class, 'ubahJanjiTemu']);
     Route::delete('/janji/{id}', [JanjiTemuController::class, 'hapusJanjiTemu']);
+
+    Route::apiResource('resep', ResepController::class);
 
     Route::prefix('rekam-medis')->group(function () {
         Route::get('/', [RekamMedisController::class, 'index']);

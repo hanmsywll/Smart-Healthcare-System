@@ -390,7 +390,7 @@ class JanjiTemuService
             if (! $dokter || $janjiTemu->id_dokter !== $dokter->id_dokter) {
                 throw new AuthorizationException('Anda hanya dapat mengakses janji temu milik Anda');
             }
-            $allowedKeys = ['id_dokter', 'status'];
+            $allowedKeys = ['id_dokter', 'status', 'tanggal_janji', 'waktu_mulai'];
             $unknownKeys = array_diff(array_keys($data), $allowedKeys);
             if (! empty($unknownKeys)) {
                 throw new AuthorizationException('Dokter hanya dapat mengubah dokter penanggung jawab atau menandai selesai');
